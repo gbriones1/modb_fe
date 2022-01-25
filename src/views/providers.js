@@ -2,6 +2,10 @@ import { clickEdit, doREST, defaultDeleteSingleModal, defaultMultiDeleteModal } 
 
 let products = JSON.parse(localStorage.getItem("product_ids") || "{}");
 
+function multichoiceProductFormatter(data){
+    return data.code +" - "+ data.name + " - " + data.description
+}
+
 const baseFormConfig = {
     fields: [
         {
@@ -36,16 +40,34 @@ const baseFormConfig = {
                     type: "checkbox"
                 }
             ],
-        }
+        },
+        {
+            type: "multichoice",
+            name: "provider_products",
+            label: "Productos",
+            endpoint: "product",
+            formatter: multichoiceProductFormatter,
+            fields: [
+                {
+                    name: "code",
+                    label: "Codigo",
+                    type: "text",
+                }, {
+                    name: "price",
+                    label: "Precio",
+                    type: "number",
+                }, 
+            ],
+        },
     ]
 }
 
 function detailViewFormatter(index, row, element){
     if (Object.keys(row).length !== 0){
-        var table = '<br><h4>Productos</h4><table class="table table-sm table-hover"><tr><th>Codigo</th><th>Descripcion</th><th>Precio</th><th>Descuento</th></tr><tbody>'
+        var table = '<br><h4>Productos</h4><table class="table table-sm table-hover"><tr><th>Codigo Proveedor</th><th>Codigo Interno</th><th>Descripcion</th><th>Precio</th></tr><tbody>'
         for (let pp of row.provider_products){
-            var p = products[pp.product]
-            table += '<tr><td>'+p.code+'</td><td>'+p.name+" - "+p.description+'</td><td>$'+pp.price.toFixed(2)+'</td><td>$'+pp.discount.toFixed(2)+'</td></tr>'
+            var p = products[pp.product.id]
+            table += '<tr><td>'+pp.code+'</td><td>'+p.code+'</td><td>'+p.name+" - "+p.description+'</td><td>$'+pp.price.toFixed(2)+'</td></tr>'
         }
         table += '</tbody><tfoot></tfoot></table>'
         return table
@@ -53,9 +75,10 @@ function detailViewFormatter(index, row, element){
     return ""
 }
 
-function ppLengthFormatter(value, row, index, field){
-    return row.provider_products.length
-}
+// function ppLengthFormatter(value, row, index, field){
+//     return row.provider_products.length
+// }
+
 const providers = {
     name: "Proveedores",
     endpoint: "/provider",
@@ -78,11 +101,10 @@ const providers = {
             sortable: true,
             filterControl: 'input'
         }, {
-            field: 'provider_products_length',
+            field: 'products_amount',
             title: 'Cantidad de productos',
             sortable: true,
-            filterControl: 'input',
-            formatter: ppLengthFormatter
+            filterControl: 'input'
         }],
         rowActions: [
             {

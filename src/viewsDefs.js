@@ -12,6 +12,7 @@ import taxpayers from "./views/taxpayers";
 import users from "./views/users";
 import workbuys from "./views/workbuys";
 import works from "./views/works";
+import prices from "./views/prices";
 
 var viewsDefs = {
     "organization": organizations,
@@ -21,11 +22,12 @@ var viewsDefs = {
     "storagetype": storagetypes,
     "storage": storage,
     "product": products,
+    "price": prices,
     "provider": providers,
     "customer": customers,
     "employee": employees,
     "workbuy": workbuys,
-    "order": orders,
+    "work_order": orders,
     "work": works,
     "user": users,
 }

@@ -1,5 +1,5 @@
 import { Component } from "react";
-import { Spinner } from "react-bootstrap";
+import { Button, Spinner } from "react-bootstrap";
 import { cachableEndpoints, cacheData } from "../tableUtils"
 import { fetchData } from "../utils";
 
@@ -56,6 +56,20 @@ class LandingPage extends Component{
             })
         }
     }
+    reloadDB(){
+        for (let endpoint of cachableEndpoints){
+            if (localStorage.hasOwnProperty(endpoint)){
+                localStorage.removeItem(endpoint)
+                localStorage.removeItem(endpoint+"_ids")
+            }
+        }
+        this.setState({
+            message:  "Cargando la base de datos remota, espera un momento por favor...",
+            cacheLoaded: false,
+            isLoading: false,
+            retries: 0
+        }, () => this.checkCache())
+    }
     componentDidMount() {
         if (!this.state.isLoading && !this.state.cacheLoaded){
             this.checkCache();
@@ -73,6 +87,7 @@ class LandingPage extends Component{
                     {this.state.isLoading && <Spinner animation="border" role="status">
                         <span className="visually-hidden">Loading...</span>
                     </Spinner>}
+                    {this.state.cacheLoaded && <p className="col-md-8 fs-4">Volver a cargar la Base de Datos: <Button onClick={() => this.reloadDB()}><i className="fa fa-redo"></i></Button></p>}
                 </div>
             </div>
         )

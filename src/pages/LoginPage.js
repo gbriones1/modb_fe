@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Col, Container, Row } from 'react-bootstrap';
-import { loginUser } from '../utils';
+import { fetchData, loginUser } from '../utils';
 
-export default function Login({ setToken }) {
+export default function Login({ setToken, setUser }) {
     const [username, setUserName] = useState("");
     const [password, setPassword] = useState("");
     const [rememberme, setRememberMe] = useState(false);
@@ -15,8 +15,14 @@ export default function Login({ setToken }) {
             password,
             rememberme
         });
-        if (token) {
+        if (token && token.access_token) {
+            // console.log(token)
             localStorage.setItem('token', token.access_token);
+            const response = await fetchData("user/me/")
+            let userData = await response.json();
+            // console.log(userData)
+            localStorage.setItem('currentUser', JSON.stringify(userData));
+            setUser(userData);
             setToken(token.access_token);
         }
     }

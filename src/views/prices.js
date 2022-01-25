@@ -1,69 +1,45 @@
-import { listFormatter, boolFormatter, clickEdit, defaultDeleteSingleModal, doREST, defaultMultiDeleteModal } from '../tableUtils'
+import { clickEdit, doREST, defaultMultiDeleteModal, defaultDeleteSingleModal } from "../tableUtils";
 
-const editFormConfig = {
+const baseFormConfig = {
     fields: [
         {
-            type: "checkbox",
-            name: "is_admin",
-            label: "Administrador"
+            type: "number",
+            name: "max_price_limit",
+            label: "Limite maximo"
+        },
+        {
+            type: "number",
+            name: "increment",
+            label: "Incremento"
         },
     ]
 }
 
-const newFormConfig = {
-    fields: [
-        {
-            type: "text",
-            name: "username",
-            label: "Nombre"
-        },
-        {
-            type: "password",
-            name: "password",
-            label: "Contrasena"
-        },
-        {
-            type: "checkbox",
-            name: "is_admin",
-            label: "Administrador"
-        },
-    ]
-}
-
-const users = {
-    name: "Usuarios",
-    endpoint: "/user",
+const prices = {
+    name: "Porcentajes de incremento para venta",
+    endpoint: "/percentage",
     table: {
         properties: {
             filterControl: true,
             pagination: true,
             search: true,
         },
-        columns: [
-            {
-                field: 'state',
-                checkbox: true,
-                align: 'center',
-                valign: 'middle'
-            }, {
-                field: 'id',
-                title: 'ID'
-            }, {
-                field: 'username',
-                title: 'Nombre de usuario',
-                sortable: true,
-                filterControl: 'input'
-            }, {
-                field: 'roles',
-                title: 'Permisos',
-                formatter: listFormatter,
-            }, {
-                field: 'is_admin',
-                title: 'Administrador',
-                align: 'center',
-                formatter: boolFormatter,
-            }
-        ],
+        columns: [{
+            field: 'state',
+            checkbox: true,
+            align: 'center',
+            valign: 'middle'
+        }, {
+            field: 'max_price_limit',
+            title: 'Limite maximo',
+            sortable: true,
+            filterControl: 'input'
+        }, {
+            field: 'increment',
+            title: 'Incremento',
+            sortable: true,
+            filterControl: 'input'
+        }],
         rowActions: [
             {
                 name: "edit",
@@ -86,7 +62,7 @@ const users = {
                     ],
                     content: {
                         type: "form",
-                        config: editFormConfig
+                        config: baseFormConfig
                     }
                 }
             },
@@ -114,7 +90,7 @@ const users = {
                 ],
                 content: {
                     type: "form",
-                    config: newFormConfig
+                    config: baseFormConfig
                 }
             }
         },
@@ -122,4 +98,4 @@ const users = {
     ],
 }
 
-export default users;
+export default prices;

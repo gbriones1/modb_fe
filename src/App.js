@@ -11,44 +11,52 @@ import AppNotifications from './components/AppNotifications';
 import './App.css';
 import ReportsPage from './pages/ReportsPage';
 
-const handleLogout = (setToken) => {
+const handleLogout = (setToken, setUser) => {
   console.log("logout")
   localStorage.removeItem('token')
+  localStorage.removeItem('currentUser')
   setToken(null)
+  setUser(null)
 }
 
 function App() {
   let token = localStorage.getItem('token');
+  let userData = JSON.parse(localStorage.getItem('currentUser') || "{}");
   const [notifications, setNotifications] = useState([]);
   const [cachedToken, setCachedToken] = useState(token);
+  const [cachedUser, setCachedUser] = useState(userData);
   if (token !== cachedToken){
     setCachedToken(token)
+    setCachedUser(userData)
   }
+  // if (userData !== cachedUser){
+  //   setCachedUser(userData)
+  // }
   if(!cachedToken) {
-    return <Login setToken={ setCachedToken } />
+    return <Login setToken={ setCachedToken } setUser={ setCachedUser } />
   }
   return (
       <Router history={history}>
         <Switch>
           <Route path="/logout" render={() => {
-            handleLogout(setCachedToken)
+            handleLogout(setCachedToken, setCachedUser)
             return <Redirect to="/" />
           }}>
           </Route>
           <Route path='/reports'>
-            <AppNavbar />
+            <AppNavbar user={cachedUser} />
             <ReportsPage history={ history }></ReportsPage>
           </Route>
           <Route path="/:model/:id">
             <SheetPage setToken={ setCachedToken } setNotifications={ setNotifications } />
           </Route>
           <Route path="/:model">
-            <AppNavbar />
+            <AppNavbar user={cachedUser} />
             <TablePage history={ history } setToken={ setCachedToken } setNotifications={ setNotifications } />
             <AppNotifications notifications={ notifications } ></AppNotifications>
           </Route>
           <Route path="/">
-            <AppNavbar />
+            <AppNavbar user={cachedUser} />
             <AppNotifications notifications={ notifications } ></AppNotifications>
             <LandingPage history={ history }></LandingPage>
           </Route>

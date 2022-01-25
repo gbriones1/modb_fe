@@ -19,7 +19,7 @@ class AppSheet extends Component {
             console.log("Building sheet");
             $('nav.navbar').hide();
             var setNotifications = this.props.setNotifications;
-            var name = this.props.dataEndpoint + "/" + this.props.dataId
+            var name = this.props.dataEndpoint.substring(1) + "/" + this.props.dataId
             const response = await fetchData(name);
             let data = await response.json();
             if (response.ok){

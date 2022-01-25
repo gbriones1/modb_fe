@@ -13,7 +13,7 @@ const AppBuyIdsFilter = ({ history, setQuerystring }) => {
             {
                 type: "number",
                 name: "workbuy_ids",
-                label: "Numero de Gasto de trabajo",
+                label: "Numero de Registro de trabajo",
                 labelCol: 6,
                 fieldCol: 4,
                 defaultValue: workbuy_id

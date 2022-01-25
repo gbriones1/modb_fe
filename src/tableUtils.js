@@ -13,6 +13,7 @@ const cachableEndpoints = [
     "brand",
     "appliance",
     "product",
+    "percentage",
     "organization",
     "taxpayer",
     "storage",
@@ -142,19 +143,32 @@ function cacheData(endpoint, data){
         localStorage.setItem(endpoint, JSON.stringify(data));
         let byId = {}
         var ppIds = {};
-        var prices = {};
+        var buyPrices = {};
+        var cpIds = {};
+        var sellPrices = {};
         for (let x of data){
             byId[x.id] = x
             if (endpoint === "provider"){
                 for (let pp of x.provider_products){
                     ppIds[pp.id] = pp;
-                    if (!(pp.product in prices)){
-                        prices[pp.product] = []
+                    if (!(pp.product in buyPrices)){
+                        buyPrices[pp.product] = []
                     }
-                    prices[pp.product].push({
+                    buyPrices[pp.product].push({
                         provider: x.id,
-                        price: pp.price,
-                        discount: pp.discount
+                        price: pp.price
+                    })
+                }
+            }
+            if (endpoint === "customer"){
+                for (let cp of x.customer_products){
+                    cpIds[cp.id] = cp;
+                    if (!(cp.product in sellPrices)){
+                        sellPrices[cp.product] = []
+                    }
+                    sellPrices[cp.product].push({
+                        customer: x.id,
+                        price: cp.price
                     })
                 }
             }
@@ -162,7 +176,11 @@ function cacheData(endpoint, data){
         localStorage.setItem(endpoint+"_ids", JSON.stringify(byId));
         if (endpoint === "provider"){
             localStorage.setItem("provider_products_ids", JSON.stringify(ppIds));
-            localStorage.setItem("product_prices_ids", JSON.stringify(prices));
+            localStorage.setItem("product_buy_prices_ids", JSON.stringify(buyPrices));
+        }
+        if (endpoint === "customer"){
+            localStorage.setItem("customer_products_ids", JSON.stringify(cpIds));
+            localStorage.setItem("product_sell_prices_ids", JSON.stringify(sellPrices));
         }
     }
 }
@@ -201,7 +219,7 @@ function cacheData(endpoint, data){
             result[$(this).attr("name")] = value;
         });
         form.find("select").each(function(){
-            result[$(this).attr("name")] = parseInt($(this).val()) || null;
+            result[$(this).attr("name")] = parseInt($(this).val()) || $(this).val();
         });
         return result
     };
@@ -383,6 +401,71 @@ function clickView (e, value, data, index){
     // history.push(window.location.pathname+"/"+data.id);
 }
 
+function createToast(color, text) {
+    $('div.toast-container').append(`<div class="toast show text-white bg-`+color+`" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+        <div class="toast-body">`+text+`</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+</div>`)
+}
+
+function getFieldLabel (form, fieldName){
+    return form.find('[name="'+fieldName+'"').closest(".form-field").find('label').text()
+}
+
+function getFieldType (form, fieldName){
+    return form.find('[name="'+fieldName+'"').data("type") || form.find('[name="'+fieldName+'"').attr("type")
+}
+
+function handleAPIErrors (data, form){
+    console.log(form)
+    console.log(data)
+    if (typeof(data) == "object"){
+        if ("detail" in data){
+            for (let e of data.detail){
+                switch (e.type){
+                    case "value_error.missing":
+                        createToast("danger", "Campo faltante: "+getFieldLabel(form, e.loc[1]));
+                        break;
+                    case "type_error.none.not_allowed":
+                        if (e.loc.length === 2){
+                            createToast("danger", "No puede ir vacio: "+getFieldLabel(form, e.loc[1]));
+                        } else {
+                            switch(getFieldType(form, e.loc[1])) {
+                                case "form-table":
+                                    var formTableForm = $(form.find('[name="'+e.loc[1]+'"').closest('div').find('button[data-bs-toggle="modal"]').data("bsTarget")).find('form')
+                                    createToast("danger", "No puede ir vacio en "+getFieldLabel(form, e.loc[1])+" numero "+(e.loc[2]+1)+": "+getFieldLabel(formTableForm, e.loc[3]));
+                                    break;
+                                default:
+                                    createToast("danger", "No puede ir vacio en "+getFieldLabel(form, e.loc[1])+" numero "+(e.loc[2]+1)+": "+e.loc[3]);
+                            }
+                        }
+                        break
+                    case "IntegrityError":
+                        if (e.msg === "FOREIGN KEY constraint failed"){
+                            createToast("danger", "Uno de los campos no se pudo actualizar debido a que no se encontro una relacion")
+                        } else if (e.msg.startsWith('NOT NULL constraint failed:')) {
+                            createToast("danger", "No puede ir vacio: "+getFieldLabel(form, e.msg.split(": ")[1].split(".")[1]));
+                        } else if (e.msg.startsWith('UNIQUE constraint failed:')) {
+                            createToast("danger", "No se puede repetir: "+getFieldLabel(form, e.msg.split(": ")[1].split(".")[1]));
+                        } else {
+                            createToast("danger", "Error de integridad: "+getFieldLabel(form, e.msg.split(": ")[1].split(".")[1]));
+                        }
+                        break;
+                    default:
+                        createToast("danger", JSON.stringify(e));
+                }
+            }
+        }
+        else {
+            createToast("danger", JSON.stringify(data))
+        }
+    } else {
+        createToast("danger", "Error desconocido")
+    }
+}
+
 function doREST (endpoint, method, modalName, btnName, successHook, setNotifications) {
     let url = config.apiURL+endpoint;
     let token = localStorage.getItem('token');
@@ -416,8 +499,9 @@ function doREST (endpoint, method, modalName, btnName, successHook, setNotificat
                 window.location.reload();
             }
             button.attr('disabled', false)
-            // setNotifications([{text: JSON.stringify(data.responseJSON), title:"Error", variant:"danger"}])
-            console.log(data.responseJSON)
+            // setNotifications([{text: JSON.stringify(data.responseJSON), variant:"danger"}])
+            console.log(data)
+            handleAPIErrors(data.responseJSON, form)
         }
     };
     if (method === "POST" || method === "PUT"){
@@ -484,7 +568,11 @@ function formTableUpdate (form, fieldName, data){
                             text = (subData[columnDef.field.replace("_id", "")] || {name:""}).name
                         } else {
                             let cached = JSON.parse(localStorage.getItem(columnDef.config.endpoint+"_ids"));
-                            text = cached[subData[columnDef.field]].name
+                            if (cached){
+                                text = cached[subData[columnDef.field]].name
+                            } else {
+                                text = subData[columnDef.field]
+                            }
                         }
                     }
                 }
@@ -530,13 +618,16 @@ function multiChoiceAddOpt(option, data = {}){
     let field = multichoice.find('input[data-type="multichoice"]');
     var subFields = JSON.parse(field.attr("data-fields") || "[]");
     let added = multichoice.find(".list-group.added");
+    // if (!option.attr("data")){
+    //     console.log("undefined data", option.attr("data"))
+    // }
     let optionData = JSON.parse(option.attr("data"));
     let optionAdded = added.find('li[data-id="'+option.data().id+'"]');
     if (optionAdded.length > 0){
         var amountInput = optionAdded.find('input[name="amount"]');
         amountInput.val(parseInt(amountInput.val())+1);
     } else {
-        var li = $('<li class="list-group-item" data-id="'+option.data().id+'">');
+        var li = $('<li class="list-group-item searchable" data-id="'+option.data().id+'" data-parentid="'+data.id+'">');
         li.text(option.text());
         li.append('<button class="btn btn-sm btn-danger remove-btn"><i class="far fa-trash-alt"></i></button>');
         var fieldsRow = $('<div class="row">');
@@ -567,6 +658,7 @@ function multiChoiceValRefresh(multichoice){
     multichoice.find(".list-group.added li.list-group-item").each(function() {
         var item = {}
         item[subfield+"_id"] = $(this).data("id")
+        item["id"] = $(this).data("parentid")
         for (var subField of subFields){
             item[subField.name] = $(this).find('input[name="'+subField.name+'"]').val()
             if (subField.type === "number") {
@@ -584,6 +676,7 @@ function multiChoiceUpdate(form, fieldName, data, parentData){
     var subfield = field.attr("data-subfield");
     var available = field.closest('div.row').find(".list-group.available");
     var added = field.closest('div.row').find(".list-group.added");
+    added.empty();
     if (endpoint !== subfield){
         // var filterMap = JSON.parse(field.attr("data-filter-map") || "{}");
         var filters = {};
@@ -592,11 +685,16 @@ function multiChoiceUpdate(form, fieldName, data, parentData){
         //     filters[filterMap[filter]] = parentData[filter];
         // }
         multiChoiceFilter(available, filters);
-    }
-    added.empty();
-    for (var subData of data){
-        var option = available.find('[data-id="'+subData[subfield].id+'"]');
-        multiChoiceAddOpt(option, subData);
+        for (var subData of data){
+            var option = available.find('[data-id="'+subData[subfield].id+'"]');
+            multiChoiceAddOpt(option, subData);
+        }
+    } else {
+        multiChoiceFilter(available, {});
+        for (subData of data){
+            option = available.find('[data-id="'+subData[subfield].id+'"]');
+            multiChoiceAddOpt(option, subData);
+        }
     }
 }
 
@@ -611,6 +709,12 @@ $(document).on('click', '.multiChoice .added button.remove-btn', function(){
 $(document).on('keyup change', '.multiChoice input.search-available', function(){
     var value = $(this).val();
     var list = $(this).closest('.multiChoice').find('.available');
+    multiChoiceSearch(list, value);
+});
+
+$(document).on('keyup change', '.multiChoice input.search-added', function(){
+    var value = $(this).val();
+    var list = $(this).closest('.multiChoice').find('.added');
     multiChoiceSearch(list, value);
 });
 

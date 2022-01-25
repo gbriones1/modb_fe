@@ -1,8 +1,5 @@
 import { clickEdit, clickDelete, nameListGetter, doREST } from "../tableUtils";
 
-let product_prices = JSON.parse(localStorage.getItem("product_prices_ids") || "{}");
-let providers = JSON.parse(localStorage.getItem("provider_ids") || "{}");
-
 const baseFormConfig = {
     fields: [
         {
@@ -11,9 +8,9 @@ const baseFormConfig = {
             label: "Codigo"
         }, {
             type: "datalist",
-            name: "brand",
+            name: "brand_name",
             label: "Marca",
-            optSrc: "/brand",
+            endpoint: "brand",
             postprocessor: nameListGetter,
         }, {
             type: "text",
@@ -25,15 +22,17 @@ const baseFormConfig = {
             label: "Descripcion"
         }, {
             type: "datalist",
-            name: "appliance",
+            name: "appliance_name",
             label: "Aplicacion",
-            optSrc: "/appliance",
+            endpoint: "appliance",
             postprocessor: nameListGetter,
         },
     ]
 }
 
 function productPricesFormatter(value, row, index, field){
+    let product_prices = JSON.parse(localStorage.getItem("product_buy_prices_ids") || "{}");
+    let providers = JSON.parse(localStorage.getItem("provider_ids") || "{}");
     var result = "";
     if (product_prices[row.id]){
         result += '<ul class="list-group">';

@@ -6,7 +6,7 @@ import { fetchData } from "../utils";
 
 const InputHidden = ({ fieldOpts, formName }) => {
     return (
-        <Form.Group as={Row} controlId={formName+"_"+fieldOpts.name}>
+        <Form.Group as={Row} className="form-field" controlId={formName+"_"+fieldOpts.name}>
             <Form.Control type="hidden" placeholder={fieldOpts.placeholder} name={fieldOpts.name} />
         </Form.Group>
     )
@@ -14,7 +14,7 @@ const InputHidden = ({ fieldOpts, formName }) => {
 
 const InputText = ({ fieldOpts, formName }) => {
     return (
-        <Form.Group as={Row} className="mb-3" controlId={formName+"_"+fieldOpts.name}>
+        <Form.Group as={Row} className="mb-3 form-field" controlId={formName+"_"+fieldOpts.name}>
             <Form.Label column sm={2}>{fieldOpts.label}</Form.Label>
             <Col sm={10}>
                 <Form.Control type="text" placeholder={fieldOpts.placeholder} name={fieldOpts.name} />
@@ -26,10 +26,24 @@ const InputText = ({ fieldOpts, formName }) => {
     )
 }
 
+const InputPassword = ({ fieldOpts, formName }) => {
+    return (
+        <Form.Group as={Row} className="mb-3 form-field" controlId={formName+"_"+fieldOpts.name}>
+            <Form.Label column sm={2}>{fieldOpts.label}</Form.Label>
+            <Col sm={10}>
+                <Form.Control type="password" placeholder={fieldOpts.placeholder} name={fieldOpts.name} />
+                <Form.Text className="text-muted">
+                {fieldOpts.description}
+                </Form.Text>
+            </Col>
+        </Form.Group>
+    )
+}
+
 const InputNumber = ({ fieldOpts, formName }) => {
     return (
         // <Form.Group as={Row} className={(parentConfig.size === "sm" ? "" : "mb-3")} controlId={parentConfig.name+"_"+fieldOpts.name}>
-        <Form.Group as={Row} controlId={formName+"_"+fieldOpts.name}>
+        <Form.Group as={Row} className="mb-3 form-field" controlId={formName+"_"+fieldOpts.name}>
             <Form.Label column sm={fieldOpts.labelCol || 2}>{fieldOpts.label}</Form.Label>
             <Col sm={fieldOpts.fieldCol || 10}>
                 <Form.Control type="number" placeholder={fieldOpts.placeholder} name={fieldOpts.name} defaultValue={fieldOpts.defaultValue || "0"} step={fieldOpts.step || 1}/>
@@ -43,7 +57,7 @@ const InputNumber = ({ fieldOpts, formName }) => {
 
 const InputDate = ({ fieldOpts, formName }) => {
     return (
-        <Form.Group as={Row} className="mb-3" controlId={formName+"_"+fieldOpts.name}>
+        <Form.Group as={Row} className="mb-3 form-field" controlId={formName+"_"+fieldOpts.name}>
             <Form.Label column sm={2}>{fieldOpts.label}</Form.Label>
             <Col sm={10}>
                 <Form.Control type="date" placeholder={fieldOpts.placeholder} name={fieldOpts.name} defaultValue={fieldOpts.defaultValue}/>
@@ -57,7 +71,7 @@ const InputDate = ({ fieldOpts, formName }) => {
 
 const InputCheckbox = ({ fieldOpts, formName }) => {
     return (
-        <Form.Group as={Row} className="mb-3" controlId={formName+"_"+fieldOpts.name}>
+        <Form.Group as={Row} className="mb-3 form-field" controlId={formName+"_"+fieldOpts.name}>
             <Form.Label column sm={2}>{fieldOpts.label}</Form.Label>
             <Col sm={10} className="align-self-center">
                 <Form.Check type="checkbox" name={fieldOpts.name} />
@@ -70,7 +84,7 @@ const InputCheckbox = ({ fieldOpts, formName }) => {
 }
 
 const SelectInput = ({ fieldOpts, formName }) => {
-    const [options, setOpts] = useState([])
+    const [options, setOpts] = useState(fieldOpts.options || [])
     const [fetched, setFetched] = useState(false)
     useEffect(() => {
         if (!fetched){
@@ -111,7 +125,7 @@ const SelectInput = ({ fieldOpts, formName }) => {
     }
     // console.log("Rendering select from", formName, fieldOpts.name, options)
     return (
-        <Form.Group as={Row} className="mb-3" controlId={formName+"_"+fieldOpts.name}>
+        <Form.Group as={Row} className="mb-3 form-field" controlId={formName+"_"+fieldOpts.name}>
             <Form.Label column sm={2}>{fieldOpts.label}</Form.Label>
             <Col sm={10} className="align-self-center">
                 <Form.Select name={fieldOpts.name} >
@@ -132,7 +146,7 @@ const DataList = ({ fieldOpts, formName }) => {
     useEffect(() => {
         if (!fetched){
             let data = [];
-            let cached = localStorage.getItem(fieldOpts.name);
+            let cached = localStorage.getItem(fieldOpts.endpoint);
             if (cached){
                 data = JSON.parse(cached);
             }
@@ -141,10 +155,10 @@ const DataList = ({ fieldOpts, formName }) => {
                 setFetched(true)
             } else {
                 const handleFetchData = async e => {
-                    const response = await fetchData(fieldOpts.name);
+                    const response = await fetchData(fieldOpts.endpoint);
                     data = await response.json();
                     if (response.ok){
-                        cacheData(fieldOpts.name, data);
+                        cacheData(fieldOpts.endpoint, data);
                         setOpts(data.map(x => x.name));
                     } else {
                         if (response.status === 401) {
@@ -158,7 +172,7 @@ const DataList = ({ fieldOpts, formName }) => {
         }
     }, [options, fieldOpts, fetched])
     return (
-        <Form.Group as={Row} className="mb-3" controlId={formName+"_"+fieldOpts.name}>
+        <Form.Group as={Row} className="mb-3 form-field" controlId={formName+"_"+fieldOpts.name}>
             <Form.Label column sm={2}>{fieldOpts.label}</Form.Label>
             <Col sm={10}>
                 <Form.Control type="text" placeholder={fieldOpts.placeholder} list={fieldOpts.name+"Options"} name={fieldOpts.name} />
@@ -179,7 +193,7 @@ const FormTable = ({ fieldOpts, formName }) => {
         onClick = () => fieldOpts.onClick();
     }
     return (
-        <Form.Group as={Row} className="mb-3 formTable" controlId={formName+"_"+fieldOpts.name}>
+        <Form.Group as={Row} className="mb-3 formTable form-field" controlId={formName+"_"+fieldOpts.name}>
             <Form.Label column sm={2}>{fieldOpts.label}</Form.Label>
             <Col sm={10}>
                 <Form.Control type="hidden" name={fieldOpts.name} data-type="form-table"/>
@@ -279,7 +293,7 @@ const Multichoice = ({ fieldOpts, formName }) => {
     //     console.log("initial value")
     // }, [])
     return (
-        <Form.Group as={Row} className="mb-3 multiChoice" controlId={formName+"_"+fieldOpts.name}>
+        <Form.Group as={Row} className="mb-3 multiChoice form-field" controlId={formName+"_"+fieldOpts.name}>
             <Form.Label column sm={2}>{fieldOpts.label}</Form.Label>
             <Col sm={10}>
                 <Form.Control type="hidden" name={fieldOpts.name} data-type="multichoice" data-fields={JSON.stringify(fieldOpts.fields || "[]")} data-filter-map={JSON.stringify(fieldOpts.filterMap || "{}")} data-endpoint={fieldOpts.endpoint} data-subfield={(fieldOpts.subfield || fieldOpts.endpoint+"s").slice(0, -1)}/>
@@ -293,7 +307,8 @@ const Multichoice = ({ fieldOpts, formName }) => {
                 </Col>
                 <Col sm={8}>
                     <h5>Agregados</h5>
-                    <ListGroup style={{height: "438px", overflowY: "auto", textAlign: "end"}} className="added">
+                    <Form.Control type="text" placeholder="Buscar" className="search-added"/>
+                    <ListGroup style={{height: "400px", overflowY: "auto", textAlign: "end"}} className="added">
                         {/* {added.map((option, i) => <ListGroup.Item className="multiChoice-added" key={i} style={{padding: ".2rem", textAlign: "end"}} data={JSON.stringify(option)} >{fieldOpts.formatter(option)}{' '}<Button variant="danger" size="sm" onClick={(e) => removeItem(e)}><i className="far fa-trash-alt"></i></Button>{fieldOpts.fields.map((field, j) => {
                             let FieldComponent = fieldTypes[field.type];
                             return createElement(() => <FieldComponent fieldOpts={ field } parentConfig={ fieldOpts } key={ j }/>)
@@ -322,6 +337,8 @@ const AppForm = ({ name, config }) => {
                         return <InputHidden fieldOpts={ field } formName={ name } key={Math.random().toString(16).slice(2)}></InputHidden>
                     case 'text':
                         return <InputText fieldOpts={ field } formName={ name } key={Math.random().toString(16).slice(2)}></InputText>
+                    case 'password':
+                        return <InputPassword fieldOpts={ field } formName={ name } key={Math.random().toString(16).slice(2)}></InputPassword>
                     case 'number':
                         return <InputNumber fieldOpts={ field } formName={ name } key={Math.random().toString(16).slice(2)}></InputNumber>
                     case 'date':

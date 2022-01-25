@@ -6,9 +6,20 @@ const $ = require('jquery');
 let products = JSON.parse(localStorage.getItem("product_ids") || "{}");
 let provider_products = JSON.parse(localStorage.getItem("provider_products_ids") || "{}")
 
-$(document).on('click', 'button.workbuy-nav', function(){
+$(document).on('click', 'button.order-nav', function(){
+    // console.log($(this).data());
+    history.push("/work_order?workbuy_ids="+$(this).data().id)
+})
+
+$(document).on('click', 'button.work-nav', function(){
+    // console.log($(this).data());
+    history.push("/work?workbuy_ids="+$(this).data().id)
+})
+
+$(document).on('click', 'button.custom-view', function(){
     console.log($(this).data());
-    history.push("/order?workbuy_ids="+$(this).data().id)
+    let iframe =  $("iframe.view-iframe");
+    iframe.attr('src', $(this).data().endpoint+"/"+$(this).data().objectId)
 })
 
 const baseFormConfig = {
@@ -49,17 +60,52 @@ const baseFormConfig = {
                     type: "checkbox",
                 }, 
             ],
+        }, {
+            type: "formTable",
+            name: "works",
+            label: "Hojas de trabajo",
+            fields: [
+                {
+                    name: "number",
+                    label: "Folio",
+                    type: "text",
+                }, {
+                    name: "unit",
+                    label: "Unidad",
+                    type: "text",
+                }, {
+                    name: "model",
+                    label: "Modelo",
+                    type: "text",
+                }, {
+                    name: "taxpayer_id",
+                    label: "Razon social",
+                    type: "select",
+                    endpoint: "taxpayer"
+                }, {
+                    name: "authorized",
+                    label: "Autorizado",
+                    type: "checkbox",
+                }, 
+            ],
         }
     ]
 }
 
 function detailViewFormatter(index, row, element){
-    var table = '<div class="row"><div class="col"><h4>Ordenes de Compra</h4></div><div class="col-md-2"><button type="button" class="btn btn-success workbuy-nav" data-id="'+row.id+'"><i class="far fa-edit" style="width: 14px;"></i></button></div></div>'
-    table += '<table  class="table table-sm table-hover"><tr><th>Folio</th><th>Proveedor</th><th>Razon social</th><th>Autorizado</th><th>Total</th></tr><tbody>'
+    var table = '<div class="row"><div class="col"><h4>Ordenes de Compra</h4></div><div class="col-md-2"><button type="button" class="btn btn-success order-nav" data-id="'+row.id+'"><i class="far fa-edit" style="width: 14px;"></i></button></div></div>'
+    table += '<table  class="table table-sm table-hover"><tr><th>Folio</th><th>Proveedor</th><th>Razon social</th><th>Autorizado</th><th>Total</th><th>Ver</th></tr><tbody>'
     var index_in_workbuy = 0
     for (let o of row.orders){
         index_in_workbuy++
-        table += '<tr><td>'+row.number+' - '+index_in_workbuy+'</td><td>'+o.provider.name+'</td><td>'+o.taxpayer.name+'</td><td>'+boolFormatter(o.authorized)+'</td><td>$'+o.total.toFixed(2)+'</td></tr>'
+        table += '<tr><td>'+row.number+' - '+index_in_workbuy+'</td><td>'+o.provider.name+'</td><td>'+o.taxpayer.name+'</td><td>'+boolFormatter(o.authorized)+'</td><td>$'+o.total.toFixed(2)+'</td><td><button type="button" class="btn btn-info custom-view" data-endpoint="work_order" data-object-id="'+o.id+'" data-bs-toggle="modal" data-bs-target="#view"><i class="far fa-eye" style="width: 14px;"></i></button></td></tr>'
+    }
+    table += '</tbody></table>'
+    table += '<br />'
+    table += '<div class="row"><div class="col"><h4>Hojas de trabajo</h4></div><div class="col-md-2"><button type="button" class="btn btn-success work-nav" data-id="'+row.id+'"><i class="far fa-edit" style="width: 14px;"></i></button></div></div>'
+    table += '<table  class="table table-sm table-hover"><tr><th>Numero</th><th>Unidad</th><th>Modelo</th><th>Razon social</th><th>Autorizado</th><th>Total</th><th>Ver</th></tr><tbody>'
+    for (let o of row.works){
+        table += '<tr><td>'+o.number+'</td><td>'+o.unit+'</td><td>'+o.model+'</td><td>'+o.taxpayer.name+'</td><td>'+boolFormatter(o.authorized)+'</td><td>$'+o.total.toFixed(2)+'</td><td><button type="button" class="btn btn-info custom-view" data-endpoint="work" data-object-id="'+o.id+'" data-bs-toggle="modal" data-bs-target="#view"><i class="far fa-eye" style="width: 14px;"></i></button></td></tr>'
     }
     table += '</tbody></table>'
     return table
@@ -68,18 +114,20 @@ function detailViewFormatter(index, row, element){
 function detailSheetFormatter(row){
     // console.log(row)
     if (row && Object.keys(row).length !== 0){
-        var table = '<br><h4>Ordenes de Compra</h4><br><table  class="table table-hover table-stripped"><thead><tr class="table-dark"><th>Folio</th><th>Fecha</th><th>Proveedor</th><th>Razon social</th><th>Autorizado</th><th></th></tr></thead><tbody>'
-        console.log(row)
-        console.log(Object.keys(row).length)
-        console.log(row.orders)
+        var table = '<br><h4>Ordenes de Compra</h4><br><table class="table table-hover table-stripped"><thead><tr class="table-dark"><th>Folio</th><th>Fecha</th><th>Proveedor</th><th>Razon social</th><th>Autorizado</th><th></th></tr></thead><tbody>'
+        // console.log(row)
+        // console.log(Object.keys(row).length)
+        // console.log(row.orders)
+        var index_in_workbuy = 0
         for (var o of row.orders){
-            table += '<tr><td>'+row.number+' - '+o.index_in_workbuy+'</td><td>'+dateTimeFormatter(o.created_at)+'</td><td>'+o.provider.name+'</td><td>'+o.taxpayer.name+'</td><td>'+boolFormatter(o.authorized)+'</td><td></td></tr>'
-            table += '<tr><td></td><td colspan="4"><table  class="table table-sm table-hover table-bordered"><thead><tr><th>Cantidad</th><th>Codigo</th><th>Descripcion</th><th>Precio Unitario</th><th>Total</th></tr></thead><tbody>'
+            index_in_workbuy++
+            table += '<tr><td>'+row.number+' - '+index_in_workbuy+'</td><td>'+dateTimeFormatter(o.created_at)+'</td><td>'+o.provider.name+'</td><td>'+o.taxpayer.name+'</td><td>'+boolFormatter(o.authorized)+'</td><td></td></tr>'
+            table += '<tr><td></td><td colspan="4"><table class="table table-sm table-hover table-bordered"><thead><tr><th>Cantidad</th><th>Codigo</th><th>Descripcion</th><th>Precio Unitario</th><th>Total</th></tr></thead><tbody>'
             for (let up of o.order_unregisteredproducts){
                 table += '<tr><td>'+up.amount+'</td><td>'+up.code+'</td><td>'+up.description+'</td><td>$'+up.price+'</td><td>$'+(up.price*up.amount).toFixed(2)+'</td></tr>'
             }
-            for (var op of o.order_products){
-                var p = products[provider_products[op.provider_product.id].product]
+            for (var op of o.order_provider_products){
+                var p = products[provider_products[op.provider_product.id].product.id]
                 table += '<tr><td>'+op.amount+'</td><td>'+p.code+'</td><td>'+p.name+" - "+p.description+'</td><td>$'+op.price+'</td><td>$'+(op.price*op.amount).toFixed(2)+'</td></tr>'
             }
             table += '</tbody><tfoot><tr><th colspan="4" style="text-align:end;">Sub total</th><th>$'+o.subtotal.toFixed(2)+'</th></tr>'
@@ -100,7 +148,7 @@ function detailSheetFormatter(row){
 }
 
 var workbuys = {
-    name: "Gastos de trabajo",
+    name: "Registro de trabajos",
     endpoint: "/workbuy",
     daterange_filters: true,
     table: {
@@ -175,7 +223,7 @@ var workbuys = {
                     event: clickView,
                 },
                 modal: {
-                    title: 'Gasto de Trabajo',
+                    title: 'Visualizar registro',
                     size: 'xl',
                     buttons: [
                         {

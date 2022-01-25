@@ -8,6 +8,8 @@ import {LinkContainer} from 'react-router-bootstrap';
 const AppNavbar = ({ user }) => {
     // console.log(user)
     console.log("Rendering Navbar")
+    let userData = JSON.parse(localStorage.getItem("currentUser") || "{}");
+    // console.log(userData)
     return (
         <Navbar bg="dark" expand="lg" variant="dark" >
         <Container>
@@ -70,14 +72,11 @@ const AppNavbar = ({ user }) => {
                         </LinkContainer>
                         <NavDropdown.Divider />
                         <NavDropdown.Header>Compras</NavDropdown.Header>
-                        <LinkContainer to="/workbuy">
-                            <NavDropdown.Item>Gastos de trabajo</NavDropdown.Item>
+                        <LinkContainer to="/work_order">
+                            <NavDropdown.Item>Ordenes de Compra para trabajos</NavDropdown.Item>
                         </LinkContainer>
-                        <LinkContainer to="/order">
-                            <NavDropdown.Item>Ordenes de Compra</NavDropdown.Item>
-                        </LinkContainer>
-                        <LinkContainer to="/storagebuy">
-                            <NavDropdown.Item>Autorizaciones</NavDropdown.Item>
+                        <LinkContainer to="/storage_order">
+                            <NavDropdown.Item>Ordenes de Compra para almacen</NavDropdown.Item>
                         </LinkContainer>
                         <NavDropdown.Divider />
                         <NavDropdown.Header>Ventas</NavDropdown.Header>
@@ -91,9 +90,12 @@ const AppNavbar = ({ user }) => {
                             <NavDropdown.Item>Trabajadores</NavDropdown.Item>
                         </LinkContainer>
                         <NavDropdown.Divider />
-                        <NavDropdown.Header>Nomina</NavDropdown.Header>
-                        <LinkContainer to="/employee_payment">
-                            <NavDropdown.Item>Pagos</NavDropdown.Item>
+                        <NavDropdown.Header>Registro</NavDropdown.Header>
+                        <LinkContainer to="/workbuy">
+                            <NavDropdown.Item>Registro de trabajos</NavDropdown.Item>
+                        </LinkContainer>
+                        <LinkContainer to="/storagebuy">
+                            <NavDropdown.Item>Autorizaciones para almacen</NavDropdown.Item>
                         </LinkContainer>
                     </NavDropdown>
                     <LinkContainer to="/reports">
@@ -101,12 +103,14 @@ const AppNavbar = ({ user }) => {
                     </LinkContainer>
                 </Nav>
                 <Nav>
-                    <LinkContainer to="/config">
-                        <Nav.Link>Configuracion</Nav.Link>
-                    </LinkContainer>
-                    <LinkContainer to="/user">
-                        <Nav.Link>Usuarios</Nav.Link>
-                    </LinkContainer>
+                    {user.is_admin && <>
+                        <LinkContainer to="/config">
+                            <Nav.Link>Configuracion</Nav.Link>
+                        </LinkContainer>
+                        <LinkContainer to="/user">
+                            <Nav.Link>Usuarios</Nav.Link>
+                        </LinkContainer>
+                    </>}
                     <LinkContainer to="/logout">
                         <Nav.Link>Salir</Nav.Link>
                     </LinkContainer>

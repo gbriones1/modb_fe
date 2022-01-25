@@ -1,4 +1,11 @@
 div.bootstrap-table.bootstrap5 {
     font-size: small;
   }
-  
+
+div.multiChoice div.added.list-group li {
+  padding: .2rem .75rem;
+}
+
+div.multiChoice div.available.list-group .list-group-item {
+  overflow-wrap: break-word;
+}
