@@ -127,8 +127,20 @@ function detailSheetFormatter(row){
                 table += '<tr><td>'+up.amount+'</td><td>'+up.code+'</td><td>'+up.description+'</td><td>$'+up.price+'</td><td>$'+(up.price*up.amount).toFixed(2)+'</td></tr>'
             }
             for (var op of o.order_provider_products){
-                var p = products[provider_products[op.provider_product.id].product.id]
-                table += '<tr><td>'+op.amount+'</td><td>'+p.code+'</td><td>'+p.name+" - "+p.description+'</td><td>$'+op.price+'</td><td>$'+(op.price*op.amount).toFixed(2)+'</td></tr>'
+                let p = {
+                    name: "",
+                    description: "",
+                }
+                try {
+                    p = products[provider_products[op.provider_product.id].product.id]
+                } catch {
+                    products = JSON.parse(localStorage.getItem("product_ids"));
+                    provider_products = JSON.parse(localStorage.getItem("provider_products_ids"))
+                    if (products && provider_products){
+                        p = products[provider_products[op.provider_product.id].product.id]
+                    }
+                }
+                table += '<tr><td>'+op.amount+'</td><td>'+op.provider_product.code+'</td><td>'+p.name+" - "+p.description+'</td><td>$'+op.price+'</td><td>$'+(op.price*op.amount).toFixed(2)+'</td></tr>'
             }
             table += '</tbody><tfoot><tr><th colspan="4" style="text-align:end;">Sub total</th><th>$'+o.subtotal.toFixed(2)+'</th></tr>'
             if (o.discount){

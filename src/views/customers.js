@@ -66,8 +66,16 @@ function detailViewFormatter(index, row, element){
     if (Object.keys(row).length !== 0){
         var table = '<br><h4>Productos</h4><table class="table table-sm table-hover"><tr><th>Codigo Cliente</th><th>Codigo Interno</th><th>Descripcion</th><th>Precio</th></tr><tbody>'
         for (let cp of row.customer_products){
-            var p = products[cp.product.id]
-            table += '<tr><td>'+cp.code+'</td><td>'+p.code+'</td><td>'+p.name+" - "+p.description+'</td><td>$'+cp.price.toFixed(2)+'</td></tr>'
+            try {
+                let p = products[cp.product.id]
+                table += '<tr><td>'+cp.code+'</td><td>'+p.code+'</td><td>'+p.name+" - "+p.description+'</td><td>$'+cp.price.toFixed(2)+'</td></tr>'
+            } catch {
+                products = JSON.parse(localStorage.getItem("product_ids"));
+                if (products){
+                    let p = products[cp.product.id]
+                    table += '<tr><td>'+cp.code+'</td><td>'+p.code+'</td><td>'+p.name+" - "+p.description+'</td><td>$'+cp.price.toFixed(2)+'</td></tr>'
+                }
+            }
         }
         table += '</tbody><tfoot></tfoot></table>'
         return table

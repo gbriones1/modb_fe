@@ -34,7 +34,9 @@ class LandingPage extends Component{
                 this.setState({ isLoading: true }, () => console.log("isLoading", this.state.isLoading))
                 Promise.all(missingPromises).then(collectedData => {
                     for (var i in collectedData){
-                        cacheData(missingNames[i], collectedData[i])
+                        if (!("detail" in collectedData[i])){
+                            cacheData(missingNames[i], collectedData[i])
+                        }
                     }
                     this.setState({isLoading: false}, () => console.log("isLoading", this.state.isLoading))
                     console.log("Database load complete")

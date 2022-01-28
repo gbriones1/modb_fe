@@ -2,7 +2,7 @@ import { clickView, boolFormatter, dateTimeFormatter, defaultDeleteSingleModal, 
 
 let products = JSON.parse(localStorage.getItem("product_ids") || "{}");
 let provider_products = JSON.parse(localStorage.getItem("provider_products_ids") || "{}")
-let percentages = JSON.parse(localStorage.getItem("percentage") || "{}")
+let percentages = JSON.parse(localStorage.getItem("percentage") || "[]")
 
 let payment_methods = [
     {
@@ -34,9 +34,21 @@ for (let pm of payment_methods){
 localStorage.setItem("payment_method_ids", JSON.stringify(pm_ids))
 
 function multichoiceProviderProductFormatter(data){
-    var product = products[data.product.id];
-    return data.code +" - "+ product.name + " - " + product.description
+    if (data.product){
+        try {
+            var product = products[data.product.id];
+            return data.code +" - "+ product.name + " - " + product.description
+        } catch {
+            products = JSON.parse(localStorage.getItem("product_ids") || "{}");
+            let product = products[data.product.id];
+            if (product){
+                return data.code +" - "+ product.name + " - " + product.description
+            }
+            return data.code
+        }
+    }
 }
+
 
 const baseOrderFormConfig = {
     fields: [
@@ -157,7 +169,19 @@ function productsRenderer(row){
             table += '<tr><td>'+up.amount+'</td><td>'+up.code+'</td><td>'+up.description+'</td><td>$'+up.price.toFixed(2)+'</td><td>$'+(up.price*up.amount).toFixed(2)+'</td></tr>'
         }
         for (let op of row.order_provider_products){
-            var p = products[provider_products[op.provider_product.id].product.id]
+            let p = {
+                name: "",
+                description: "",
+            }
+            try {
+                p = products[provider_products[op.provider_product.id].product.id]
+            } catch {
+                products = JSON.parse(localStorage.getItem("product_ids"));
+                provider_products = JSON.parse(localStorage.getItem("provider_products_ids"))
+                if (products && provider_products){
+                    p = products[provider_products[op.provider_product.id].product.id]
+                }
+            }
             table += '<tr><td>'+op.amount+'</td><td>'+op.provider_product.code+'</td><td>'+p.name+" - "+p.description+'</td><td>$'+op.price.toFixed(2)+'</td><td>$'+(op.price*op.amount).toFixed(2)+'</td></tr>'
         }
         table += '</tbody><tfoot><tr><th colspan="4" style="text-align:end;">Sub total</th><th>$'+row.subtotal.toFixed(2)+'</th></tr>'
@@ -176,6 +200,9 @@ function productsRenderer(row){
 
 function productsRendererInternal(index, row, element){
     if (row && Object.keys(row).length !== 0){
+        if (percentages.length === 0){
+            percentages = JSON.parse(localStorage.getItem("percentage") || "[]")
+        }
         var table = '<br><h4>Productos</h4><table class="table table-sm table-hover"><tr><th>Cantidad</th><th>Codigo</th><th>Descripcion</th><th>Precio Unitario</th><th>Total</th><th>Precio Sugerido de Venta</th></tr><tbody>'
         for (let up of row.order_unregisteredproducts){
             let suggested = up.price
@@ -188,7 +215,19 @@ function productsRendererInternal(index, row, element){
             table += '<tr><td>'+up.amount+'</td><td>'+up.code+'</td><td>'+up.description+'</td><td>$'+up.price.toFixed(2)+'</td><td>$'+(up.price*up.amount).toFixed(2)+'</td><td>$'+suggested.toFixed(2)+'</td></tr>'
         }
         for (let op of row.order_provider_products){
-            var p = products[provider_products[op.provider_product.id].product.id]
+            let p = {
+                name: "",
+                description: "",
+            }
+            try {
+                p = products[provider_products[op.provider_product.id].product.id]
+            } catch {
+                products = JSON.parse(localStorage.getItem("product_ids"));
+                provider_products = JSON.parse(localStorage.getItem("provider_products_ids"))
+                if (products && provider_products){
+                    p = products[provider_products[op.provider_product.id].product.id]
+                }
+            }
             let suggested = op.price
             for (let sp of percentages){
                 if (sp.max_price_limit >= op.price){

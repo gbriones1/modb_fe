@@ -34,8 +34,19 @@ for (let pm of payment_methods){
 localStorage.setItem("payment_method_ids", JSON.stringify(pm_ids))
 
 function multichoiceProductFormatter(data){
-    var product = products[data.product.id];
-    return data.code +" - "+ product.name + " - " + product.description
+    if (data.product){
+        try {
+            var product = products[data.product.id];
+            return data.code +" - "+ product.name + " - " + product.description
+        } catch {
+            products = JSON.parse(localStorage.getItem("product_ids") || "{}");
+            let product = products[data.product.id];
+            if (product){
+                return data.code +" - "+ product.name + " - " + product.description
+            }
+            return data.code
+        }
+    }
 }
 
 function multichoiceOtherProductFormatter(data){
@@ -189,11 +200,36 @@ function productsRenderer(row){
             table += '<tr><td>'+up.amount+'</td><td>'+up.code+'</td><td>'+up.description+'</td><td>$'+up.price.toFixed(2)+'</td><td>$'+(up.price*up.amount).toFixed(2)+'</td></tr>'
         }
         for (let op of row.work_products){
-            var p = products[op.product.id]
+            let p = {
+                code: "",
+                name: "",
+                description: "",
+            }
+            try {
+                p = products[op.product.id]
+            } catch {
+                products = JSON.parse(localStorage.getItem("product_ids"));
+                if (products){
+                    p = products[op.product.id]
+                }
+            }
             table += '<tr><td>'+op.amount+'</td><td>'+p.code+'</td><td>'+p.name+" - "+p.description+'</td><td>$'+op.price.toFixed(2)+'</td><td>$'+(op.price*op.amount).toFixed(2)+'</td></tr>'
         }
         for (let op of row.work_customer_products){
-            let p = products[customer_products[op.customer_product.id].product.id]
+            let p = {
+                code: "",
+                name: "",
+                description: "",
+            }
+            try {
+                p = products[customer_products[op.customer_product.id].product.id]
+            } catch {
+                products = JSON.parse(localStorage.getItem("product_ids"));
+                customer_products = JSON.parse(localStorage.getItem("customer_products_ids"))
+                if (products && customer_products){
+                    p = products[customer_products[op.customer_product.id].product.id]
+                }
+            }
             table += '<tr><td>'+op.amount+'</td><td>'+p.code+'</td><td>'+p.name+" - "+p.description+'</td><td>$'+op.price.toFixed(2)+'</td><td>$'+(op.price*op.amount).toFixed(2)+'</td></tr>'
         }
         table += '</tbody><tfoot><tr><th colspan="4" style="text-align:end;">Sub total</th><th>$'+row.subtotal.toFixed(2)+'</th></tr>'
