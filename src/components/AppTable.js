@@ -5,10 +5,25 @@ import 'bootstrap-table/dist/bootstrap-table.min.css'
 import AppModal from "./AppModal";
 import { cacheData } from "../tableUtils";
 import { fetchData } from "../utils";
+// window.bootstrap = require('bootstrap');
+// const $ = require('jquery');
+// $.bootstrapTable = require('bootstrap-table');
+// require('tableexport.jquery.plugin/libs/FileSaver/FileSaver.min')
+// require('bootstrap-table/dist/extensions/filter-control/bootstrap-table-filter-control.min')
+// var bte = require('bootstrap-table/dist/extensions/export/bootstrap-table-export')
+// $.tableExport = require('tableexport.jquery.plugin/tableExport.min')
+
+const $ = window.$ = window.jQuery = require('jquery');
 window.bootstrap = require('bootstrap');
-const $ = require('jquery');
-$.bootstrapTable = require('bootstrap-table');
-require('bootstrap-table/dist/extensions/filter-control/bootstrap-table-filter-control')
+require('bootstrap-table');
+require('bootstrap-table/dist/extensions/filter-control/bootstrap-table-filter-control.min');
+require('tableexport.jquery.plugin');
+require('tableexport.jquery.plugin/libs/jsPDF/polyfills.umd.min');
+window.jspdf = require('tableexport.jquery.plugin/libs/jsPDF/jspdf.umd.min');
+window.XLSX = require('tableexport.jquery.plugin/libs/js-xlsx/xlsx.core.min');
+window.html2canvas = require('tableexport.jquery.plugin/libs/html2canvas/html2canvas.min');
+require('bootstrap-table/dist/extensions/export/bootstrap-table-export.min');
+
 
 class AppTable extends Component {
     constructor(props) {
@@ -54,6 +69,8 @@ class AppTable extends Component {
                     formatter: this.getActionsFormatter,
                     width: this.props.tableOpts.rowActions.length*60,
                     align: 'center',
+                    switchable: false,
+                    forceHide: true,
                     events: {}
                 }
                 for (var action of this.props.tableOpts.rowActions){
@@ -92,7 +109,7 @@ class AppTable extends Component {
                             data = this.props.tableOpts.properties.responseHandler(data);
                         }
                         tableConfig.data = data
-                        $(this.main).bootstrapTable(tableConfig);
+                        var bttable = $(this.main).bootstrapTable(tableConfig);
                         cacheData(name, data);
                     } else {
                         if (response.status === 401) {

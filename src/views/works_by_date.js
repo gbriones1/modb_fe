@@ -1,18 +1,8 @@
-import { clickView, boolFormatter, dateTimeFormatter, defaultDeleteSingleModal, defaultMultiDeleteModal, priceFormatter, doREST, clickEdit, doPrint } from "../tableUtils";
+import { clickView, boolFormatter, dateTimeFormatter, defaultDeleteSingleModal, defaultMultiDeleteModal, priceFormatter, doREST, clickEdit, listFormatter, doPrint } from "../tableUtils";
 
-const $ = require('jquery');
-
-$(document).on('change', 'input.custom-price-input', function(){
-    let perc = $(this).val()/100.0
-    $(this).closest('table').find('td.custom-price').each(function(){
-        let val = $(this).data().value
-        $(this).text("$"+(val+(val*perc)).toFixed(2))
-    })
-})
 
 let products = JSON.parse(localStorage.getItem("product_ids") || "{}");
-let provider_products = JSON.parse(localStorage.getItem("provider_products_ids") || "{}")
-let percentages = JSON.parse(localStorage.getItem("percentage") || "[]")
+let customer_products = JSON.parse(localStorage.getItem("customer_products_ids") || "{}")
 
 let payment_methods = [
     {
@@ -43,7 +33,7 @@ for (let pm of payment_methods){
 }
 localStorage.setItem("payment_method_ids", JSON.stringify(pm_ids))
 
-function multichoiceProviderProductFormatter(data){
+function multichoiceProductFormatter(data){
     if (data.product){
         try {
             var product = products[data.product.id];
@@ -59,22 +49,33 @@ function multichoiceProviderProductFormatter(data){
     }
 }
 
+function multichoiceOtherProductFormatter(data){
+    return data.code +" - "+ data.name + " - " + data.description
+}
 
-const baseOrderFormConfig = {
+function multichoiceEmployeeFormatter(data){
+    return data.name
+}
+
+const baseFormConfig = {
     fields: [
         {
-            type: "hidden",
-            name: "provider",
+            type: "text",
+            name: "number",
+            label: "Folio",
+        }, {
+            type: "text",
+            name: "unit",
+            label: "Unidad",
+        }, {
+            type: "text",
+            name: "model",
+            label: "Modelo",
         }, {
             type: "select",
             name: "taxpayer_id",
             label: "RFC",
             endpoint: "taxpayer"
-        }, {
-            type: "select",
-            name: "claimant_id",
-            label: "Recolector",
-            endpoint: "employee"
         }, {
             type: "text",
             name: "invoice_number",
@@ -92,6 +93,14 @@ const baseOrderFormConfig = {
             name: "include_iva",
             label: "Incluir IVA"
         }, {
+            type: "checkbox",
+            name: "requires_invoice",
+            label: "Requiere factura"
+        }, {
+            type: "checkbox",
+            name: "has_credit",
+            label: "Credito"
+        }, {
             type: "number",
             name: "discount",
             label: "Descuento",
@@ -101,16 +110,21 @@ const baseOrderFormConfig = {
             name: "comment",
             label: "Observaciones",
         }, {
+            type: "multichoice",
+            name: "work_employees",
+            label: "Trabajadores",
+            endpoint: "employee",
+            formatter: multichoiceEmployeeFormatter,
+            fields: [],
+        }, {
             type: "formTable",
-            name: "order_unregisteredproducts",
+            name: "work_unregisteredproducts",
             label: "Productos no registrados",
             fields: [
                 {
                     name: "amount",
                     label: "Cantidad",
                     type: "number",
-                    defaultValue: 1,
-                    step: 1
                 }, {
                     name: "code",
                     label: "Codigo",
@@ -123,17 +137,15 @@ const baseOrderFormConfig = {
                     name: "price",
                     label: "Precio Unitario",
                     type: "number",
-                    defaultValue: 0.0,
-                    step: 0.01
                 }, 
             ],
         }, {
             type: "multichoice",
-            name: "order_provider_products",
-            label: "Productos registrados",
-            endpoint: "provider",
-            subfield: "provider_products",
-            formatter: multichoiceProviderProductFormatter,
+            name: "work_customer_products",
+            label: "Productos en lista de precios",
+            endpoint: "customer",
+            subfield: "customer_products",
+            formatter: multichoiceProductFormatter,
             fields: [
                 {
                     name: "amount",
@@ -146,8 +158,25 @@ const baseOrderFormConfig = {
                 }, 
             ],
             filterMap: {
-                "provider": "provider"
+                "customer": "customer"
             }
+        }, {
+            type: "multichoice",
+            name: "work_products",
+            label: "Otros productos registrados",
+            endpoint: "product",
+            formatter: multichoiceOtherProductFormatter,
+            fields: [
+                {
+                    name: "amount",
+                    label: "Cantidad",
+                    type: "number",
+                }, {
+                    name: "price",
+                    label: "Precio",
+                    type: "number",
+                }, 
+            ]
         }, {
             type: "formTable",
             name: "payments",
@@ -168,85 +197,49 @@ const baseOrderFormConfig = {
                     endpoint: "payment_method" 
                 },
             ],
-        }
+        },
     ]
 }
 
 function productsRenderer(row){
     if (row && Object.keys(row).length !== 0){
-        var table = '<br><h4>Productos</h4><table class="table table-sm table-hover"><thead><tr><th>Cantidad</th><th>Codigo</th><th>Descripcion</th><th>Precio Unitario</th><th>Total</th></tr></thead><tbody>'
-        for (let up of row.order_unregisteredproducts){
+        var table = '<div class="card"><div class="card-body">'
+        table += '<br><h4>Productos</h4><table class="table table-sm table-hover"><thead><tr><th>Cantidad</th><th>Codigo</th><th>Descripcion</th><th>Precio Unitario</th><th>Total</th></tr></thead><tbody>'
+        for (let up of row.work_unregisteredproducts){
             table += '<tr><td>'+up.amount+'</td><td>'+up.code+'</td><td>'+up.description+'</td><td>$'+up.price.toFixed(2)+'</td><td>$'+(up.price*up.amount).toFixed(2)+'</td></tr>'
         }
-        for (let op of row.order_provider_products){
+        for (let op of row.work_products){
             let p = {
+                code: "",
                 name: "",
                 description: "",
             }
             try {
-                p = products[provider_products[op.provider_product.id].product.id]
+                p = products[op.product.id]
             } catch {
                 products = JSON.parse(localStorage.getItem("product_ids"));
-                provider_products = JSON.parse(localStorage.getItem("provider_products_ids"))
-                if (products && provider_products){
-                    p = products[provider_products[op.provider_product.id].product.id]
+                if (products){
+                    p = products[op.product.id]
                 }
             }
-            table += '<tr><td>'+op.amount+'</td><td>'+op.provider_product.code+'</td><td>'+p.name+" - "+p.description+'</td><td>$'+op.price.toFixed(2)+'</td><td>$'+(op.price*op.amount).toFixed(2)+'</td></tr>'
+            table += '<tr><td>'+op.amount+'</td><td>'+p.code+'</td><td>'+p.name+" - "+p.description+'</td><td>$'+op.price.toFixed(2)+'</td><td>$'+(op.price*op.amount).toFixed(2)+'</td></tr>'
         }
-        table += '</tbody><tfoot><tr><th colspan="4" style="text-align:end;">Sub total</th><th>$'+row.subtotal.toFixed(2)+'</th></tr>'
-        if (row.discount){
-            table += '<tr><th colspan="4" style="text-align:end;">Descuento</th><th>-$'+row.discount.toFixed(2)+'</th></tr>'
-        }
-        if (row.include_iva) {
-            table += '<tr><th colspan="4" style="text-align:end;">IVA</th><th>$'+((row.subtotal-row.discount)*0.16).toFixed(2)+'</th></tr>'
-        }
-        table += '<tr><th colspan="4" style="text-align:end;">Total</th><th>$'+row.total.toFixed(2)+'</th></tr>'
-        table += '</tfoot></table>'
-        return table
-    }
-    return ""
-}
-
-function productsRendererInternal(index, row, element){
-    if (row && Object.keys(row).length !== 0){
-        if (percentages.length === 0){
-            percentages = JSON.parse(localStorage.getItem("percentage") || "[]")
-        }
-        var table = '<div class="card"><div class="card-body">'
-        table += '<h4>Productos</h4><table class="table table-sm table-hover"><thead><tr><th>Cantidad</th><th>Codigo</th><th>Descripcion</th><th>Precio Unitario</th><th>Total</th><th>Precio Sugerido de Venta</th><th>Incremento de precio personalizado:<div class="row"><input class="form-control custom-price-input" type="number" style="width:5em;" value="45"/>%</div></th></tr></thead><tbody>'
-        for (let up of row.order_unregisteredproducts){
-            let suggested = up.price
-            for (let sp of percentages){
-                if (sp.max_price_limit >= up.price){
-                    suggested = up.price + (up.price * (sp.increment/100))
-                    break;
-                }
-            }
-            table += '<tr><td>'+up.amount+'</td><td>'+up.code+'</td><td>'+up.description+'</td><td>$'+up.price.toFixed(2)+'</td><td>$'+(up.price*up.amount).toFixed(2)+'</td><td>$'+suggested.toFixed(2)+'</td><td class="custom-price" data-value="'+up.price+'">$'+(up.price+(up.price*0.45)).toFixed(2)+'</td></tr>'
-        }
-        for (let op of row.order_provider_products){
+        for (let op of row.work_customer_products){
             let p = {
+                code: "",
                 name: "",
                 description: "",
             }
             try {
-                p = products[provider_products[op.provider_product.id].product.id]
+                p = products[customer_products[op.customer_product.id].product.id]
             } catch {
                 products = JSON.parse(localStorage.getItem("product_ids"));
-                provider_products = JSON.parse(localStorage.getItem("provider_products_ids"))
-                if (products && provider_products){
-                    p = products[provider_products[op.provider_product.id].product.id]
+                customer_products = JSON.parse(localStorage.getItem("customer_products_ids"))
+                if (products && customer_products){
+                    p = products[customer_products[op.customer_product.id].product.id]
                 }
             }
-            let suggested = op.price
-            for (let sp of percentages){
-                if (sp.max_price_limit >= op.price){
-                    suggested = op.price + (op.price * (sp.increment/100))
-                    break;
-                }
-            }
-            table += '<tr><td>'+op.amount+'</td><td>'+op.provider_product.code+'</td><td>'+p.name+" - "+p.description+'</td><td>$'+op.price.toFixed(2)+'</td><td>$'+(op.price*op.amount).toFixed(2)+'</td><td>$'+suggested.toFixed(2)+'</td></tr>'
+            table += '<tr><td>'+op.amount+'</td><td>'+op.customer_product.code+'</td><td>'+p.name+" - "+p.description+'</td><td>$'+op.price.toFixed(2)+'</td><td>$'+(op.price*op.amount).toFixed(2)+'</td></tr>'
         }
         table += '</tbody><tfoot><tr><th colspan="4" style="text-align:end;">Sub total</th><th>$'+row.subtotal.toFixed(2)+'</th></tr>'
         if (row.discount){
@@ -260,7 +253,7 @@ function productsRendererInternal(index, row, element){
         table += '</div></div>'
         table += '<br>'
         table += '<div class="card"><div class="card-body">'
-        table += '<h4>Pagos</h4><table class="table table-sm table-hover"><thead><tr><th>Fecha</th><th>Forma de pago</th><th>Cantidad</th></tr></thead><tbody>'
+        table += '<br><h4>Pagos</h4><table class="table table-sm table-hover"><thead><tr><th>Fecha</th><th>Forma de pago</th><th>Cantidad</th></tr></thead><tbody>'
         let totalPay = 0.0;
         for (let p of row.payments){
             totalPay += p.amount
@@ -282,14 +275,20 @@ function detailViewFormatter(index, row, element){
     return ""
 }
 
-function indexFormatter(value, row, index, field){
-    return row.workbuy_number + " - " +(index+1)
+function employeesListFormatter(value, row, index, field){
+    var result = []
+    if (value) {
+        for (let we of value){
+            result.push(we.employee.name)
+        }
+    }
+    return result.join(" / ")
 }
 
-var orders = {
-    name: "Ordenes de compra para trabajos",
-    endpoint: "/order",
-    buyIds_filters: true,
+var works_by_date = {
+    name: "Hojas de Trabajo",
+    endpoint: "/work_by_date",
+    daterange_filters: true,
     table: {
         properties: {
             filterControl: true,
@@ -299,7 +298,7 @@ var orders = {
             showColumns: true,
             showExport: true,
             exportTypes: ['png', 'csv', 'doc', 'excel', 'xlsx', 'pdf'],
-            detailFormatter: productsRendererInternal,
+            detailFormatter: detailViewFormatter,
         },
         columns: [{
             field: 'state',
@@ -307,11 +306,10 @@ var orders = {
             align: 'center',
             valign: 'middle'
         }, {
-            field: 'index',
+            field: 'number',
             title: 'Folio',
             sortable: true,
-            filterControl: 'input',
-            formatter: indexFormatter,
+            filterControl: 'input'
         }, {
             field: 'created_at',
             title: 'Fecha',
@@ -319,8 +317,18 @@ var orders = {
             filterControl: 'input',
             formatter: dateTimeFormatter,
         }, {
-            field: 'provider.name',
-            title: 'Proveedor',
+            field: 'customer.name',
+            title: 'Cliente',
+            sortable: true,
+            filterControl: 'input',
+        }, {
+            field: 'unit',
+            title: 'Unidad',
+            sortable: true,
+            filterControl: 'input',
+        }, {
+            field: 'model',
+            title: 'Modelo',
             sortable: true,
             filterControl: 'input',
         }, {
@@ -329,10 +337,11 @@ var orders = {
             sortable: true,
             filterControl: 'input',
         }, {
-            field: 'claimant.name',
-            title: 'Recolector',
+            field: 'work_employees',
+            title: 'Trabajadores',
             sortable: true,
-            filterControl: 'input',
+            formatter: listFormatter,
+            visible: false,
         }, {
             field: 'comment',
             title: 'Observaciones',
@@ -340,8 +349,16 @@ var orders = {
             filterControl: 'input',
             visible: false,
         }, {
+            field: 'requires_invoice',
+            title: 'Requiere Factura',
+            sortable: true,
+            formatter: boolFormatter,
+            align: 'center',
+            valign: 'middle',
+            visible: false,
+        }, {
             field: 'invoice_number',
-            title: 'Factura',
+            title: 'Numero de Factura',
             sortable: true,
             filterControl: 'input',
             visible: false,
@@ -350,6 +367,7 @@ var orders = {
             title: 'Fecha de Factura',
             sortable: true,
             filterControl: 'input',
+            formatter: dateTimeFormatter,
             visible: false,
         }, {
             field: 'authorized',
@@ -360,8 +378,8 @@ var orders = {
             valign: 'middle',
             visible: false,
         }, {
-            field: 'include_iva',
-            title: 'Incluye IVA',
+            field: 'has_credit',
+            title: 'Credito',
             sortable: true,
             formatter: boolFormatter,
             align: 'center',
@@ -383,7 +401,7 @@ var orders = {
                     event: clickView,
                 },
                 modal: {
-                    title: 'Orden de compra',
+                    title: 'Hoja de Trabajo',
                     size: 'xl',
                     buttons: [
                         {
@@ -420,7 +438,7 @@ var orders = {
                     ],
                     content: {
                         type: "form",
-                        config: baseOrderFormConfig
+                        config: baseFormConfig
                     }
                 }
             },
@@ -448,7 +466,7 @@ var orders = {
                 ],
                 content: {
                     type: "form",
-                    config: baseOrderFormConfig
+                    config: baseFormConfig
                 }
             }
         },
@@ -456,15 +474,25 @@ var orders = {
     ],
     sheet: {
         singleFields: [{
-            field: 'id',
+            field: 'number',
             title: 'Folio',
         }, {
             field: 'created_at',
             title: 'Fecha',
             formatter: dateTimeFormatter,
         }, {
-            field: 'provider.name',
-            title: 'Proveedor',
+            field: 'customer.name',
+            title: 'Cliente',
+        }, {
+            field: 'unit',
+            title: 'Unidad',
+        }, {
+            field: 'model',
+            title: 'Modelo',
+        }, {
+            field: 'work_employees',
+            title: 'Trabajadores',
+            formatter: employeesListFormatter
         }, {
             field: 'taxpayer.name',
             title: 'RFC',
@@ -480,4 +508,5 @@ var orders = {
     }
 }
 
-export default orders;
+
+export default works_by_date;

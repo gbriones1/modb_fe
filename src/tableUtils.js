@@ -333,6 +333,7 @@ function clickEdit (e, fieldValue, data, index) {
                 value = JSON.stringify(data[key]);
                 if (!Array.isArray(data[key])){
                     form.find('select[name="'+ key +'_id"]').val(data[key]["id"]);
+                    form.find('input[name="'+ key +'_name"]').val(data[key]["name"]);
                 }
                 // if (Array.isArray(data[key])){
                 //     value = JSON.stringify(data[key]);
@@ -748,9 +749,9 @@ $(document).on('click', '.formTable-remove', function(){
     formTableUpdate($(this).closest("form"), fieldName, data);
 })
 
-$(document).on('click', 'button[data-bs-toggle="dropdown"]', function(){
-    let menu = $(this).closest('div').find('.dropdown-menu')
-    menu.toggleClass('show')
-})
+// $(document).on('click', 'button[data-bs-toggle="dropdown"]', function(){
+//     let menu = $(this).closest('div').find('.dropdown-menu')
+//     menu.toggleClass('show')
+// })
 
 export { defaultNewModal, defaultEditModal, defaultMultiDeleteModal, defaultDeleteSingleModal, cachableEndpoints, nameListGetter, dateTimeFormatter, priceFormatter, listFormatter, fetchIDNameFormatter, boolFormatter, showDetailFormatter, debugFormatter, clickEdit, clickDelete, clickView, doREST, doFormTableUpdate, doPrint, cacheData }

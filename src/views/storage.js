@@ -4,26 +4,16 @@ const baseFormConfig = {
     fields: [
         {
             type: "select",
-            name: "organization",
+            name: "organization_id",
             label: "Organizacion",
             endpoint: "organization"
         }, {
             type: "select",
-            name: "storagetype",
+            name: "storagetype_id",
             label: "Tipo de Almacen",
             endpoint: "storagetype"
         },
     ]
-}
-
-function dataProcessor (data){
-    let organizations = JSON.parse(localStorage.getItem("organization_ids") || "{}");
-    let storagetypes = JSON.parse(localStorage.getItem("storagetype_ids") || "{}");
-    for (let x of data){
-        x.storagetype_name = Object.keys(storagetypes).length !== 0 ? storagetypes[x.storagetype].name : x.storagetype
-        x.organization_name = Object.keys(organizations).length !== 0 ? organizations[x.organization].name : x.organizations
-    }
-    return data
 }
 
 const storage = {
@@ -34,7 +24,6 @@ const storage = {
             filterControl: true,
             pagination: true,
             search: true,
-            responseHandler: dataProcessor,
         },
         columns: [{
             field: 'state',
@@ -42,12 +31,12 @@ const storage = {
             align: 'center',
             valign: 'middle'
         }, {
-            field: 'organization_name',
+            field: 'organization.name',
             title: 'Organizacion',
             sortable: true,
             filterControl: 'input'
         }, {
-            field: 'storagetype_name',
+            field: 'storagetype.name',
             title: 'Tipo de Almacen',
             sortable: true,
             filterControl: 'input'

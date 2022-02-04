@@ -2,6 +2,7 @@ import { Col, Container, Row } from "react-bootstrap";
 import { useParams } from "react-router-dom";
 import AppBuyIdsFilter from "../components/AppBuyIdsFilter";
 import AppDateRangeFilter from "../components/AppDateRageFilter";
+import AppStorageBuyIdsFilter from "../components/AppStorageBuyIdsFilter";
 import AppTable from "../components/AppTable";
 import ModalButton from "../components/ModalButton";
 
@@ -18,6 +19,7 @@ const TablePage = ({ history, setToken, setNotifications }) => {
             <Container fluid>
                 {currentDef.daterange_filters ? <AppDateRangeFilter history={history}></AppDateRangeFilter> : ""}
                 {currentDef.buyIds_filters ? <AppBuyIdsFilter history={history}></AppBuyIdsFilter> : ""}
+                {currentDef.storageBuyIds_filters ? <AppStorageBuyIdsFilter history={history}></AppStorageBuyIdsFilter> : ""}
                 <Row className="align-items-end justify-content-center">
                     <Col sm={10}>
                         <h1>{viewsDefs[model].name}</h1>

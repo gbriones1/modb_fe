@@ -6,14 +6,9 @@ const $ = require('jquery');
 let products = JSON.parse(localStorage.getItem("product_ids") || "{}");
 let provider_products = JSON.parse(localStorage.getItem("provider_products_ids") || "{}")
 
-$(document).on('click', 'button.order-nav', function(){
+$(document).on('click', 'button.storage_order-nav', function(){
     // console.log($(this).data());
-    history.push("/work_order?workbuy_ids="+$(this).data().id)
-})
-
-$(document).on('click', 'button.work-nav', function(){
-    // console.log($(this).data());
-    history.push("/work?workbuy_ids="+$(this).data().id)
+    history.push("/storage_order?storagebuy_ids="+$(this).data().id)
 })
 
 $(document).on('click', 'button.custom-view', function(){
@@ -34,6 +29,11 @@ const baseFormConfig = {
             name: "organization_id",
             label: "Organizacion",
             endpoint: "organization",
+        }, {
+            type: "select",
+            name: "storage_id",
+            label: "Almacen",
+            endpoint: "storage",
         }, {
             type: "formTable",
             name: "orders",
@@ -60,57 +60,19 @@ const baseFormConfig = {
                     type: "checkbox",
                 }, 
             ],
-        }, {
-            type: "formTable",
-            name: "works",
-            label: "Hojas de trabajo",
-            fields: [
-                {
-                    name: "number",
-                    label: "Folio",
-                    type: "text",
-                }, {
-                    name: "unit",
-                    label: "Unidad",
-                    type: "text",
-                }, {
-                    name: "model",
-                    label: "Modelo",
-                    type: "text",
-                }, {
-                    name: "taxpayer_id",
-                    label: "Razon social",
-                    type: "select",
-                    endpoint: "taxpayer"
-                }, {
-                    name: "authorized",
-                    label: "Autorizado",
-                    type: "checkbox",
-                }, 
-            ],
         }
     ]
 }
 
 function detailViewFormatter(index, row, element){
-    var table = '<div class="card"><div class="card-body">'
-    table += '<div class="row"><div class="col"><h4>Ordenes de Compra</h4></div><div class="col-md-2"><button type="button" class="btn btn-success order-nav" data-id="'+row.id+'"><i class="far fa-edit" style="width: 14px;"></i></button></div></div>'
-    table += '<table class="table table-sm table-hover"><tr><th>Folio</th><th>Proveedor</th><th>Razon social</th><th>Autorizado</th><th>Total</th><th>Ver</th></tr><tbody>'
-    var index_in_workbuy = 0
+    var table = '<div class="row"><div class="col"><h4>Ordenes de Compra</h4></div><div class="col-md-2"><button type="button" class="btn btn-success storage_order-nav" data-id="'+row.id+'"><i class="far fa-edit" style="width: 14px;"></i></button></div></div>'
+    table += '<table  class="table table-sm table-hover"><tr><th>Folio</th><th>Proveedor</th><th>Razon social</th><th>Autorizado</th><th>Total</th><th>Ver</th></tr><tbody>'
+    var index_in_storagebuy = 0
     for (let o of row.orders){
-        index_in_workbuy++
-        table += '<tr><td>'+row.number+' - '+index_in_workbuy+'</td><td>'+o.provider.name+'</td><td>'+o.taxpayer.name+'</td><td>'+boolFormatter(o.authorized)+'</td><td>$'+o.total.toFixed(2)+'</td><td><button type="button" class="btn btn-info custom-view" data-endpoint="work_order" data-object-id="'+o.id+'" data-bs-toggle="modal" data-bs-target="#view"><i class="far fa-eye" style="width: 14px;"></i></button></td></tr>'
+        index_in_storagebuy++
+        table += '<tr><td>'+row.number+' - '+index_in_storagebuy+'</td><td>'+o.provider.name+'</td><td>'+o.taxpayer.name+'</td><td>'+boolFormatter(o.authorized)+'</td><td>$'+o.total.toFixed(2)+'</td><td><button type="button" class="btn btn-info custom-view" data-endpoint="work_order" data-object-id="'+o.id+'" data-bs-toggle="modal" data-bs-target="#view"><i class="far fa-eye" style="width: 14px;"></i></button></td></tr>'
     }
     table += '</tbody></table>'
-    table += '</div></div>'
-    table += '<div class="card"><div class="card-body">'
-    table += '<div class="row"><div class="col"><h4>Hojas de trabajo</h4></div><div class="col-md-2"><button type="button" class="btn btn-success work-nav" data-id="'+row.id+'"><i class="far fa-edit" style="width: 14px;"></i></button></div></div>'
-    table += '<table class="table table-sm table-hover"><tr><th>Numero</th><th>Unidad</th><th>Modelo</th><th>Razon social</th><th>Autorizado</th><th>Total</th><th>Ver</th></tr><tbody>'
-    for (let o of row.works){
-        table += '<tr><td>'+o.number+'</td><td>'+o.unit+'</td><td>'+o.model+'</td><td>'+o.taxpayer.name+'</td><td>'+boolFormatter(o.authorized)+'</td><td>$'+o.total.toFixed(2)+'</td><td><button type="button" class="btn btn-info custom-view" data-endpoint="work" data-object-id="'+o.id+'" data-bs-toggle="modal" data-bs-target="#view"><i class="far fa-eye" style="width: 14px;"></i></button></td></tr>'
-    }
-    table += '</tbody></table>'
-    table += '</div></div>'
     return table
 }
 
@@ -121,10 +83,10 @@ function detailSheetFormatter(row){
         // console.log(row)
         // console.log(Object.keys(row).length)
         // console.log(row.orders)
-        var index_in_workbuy = 0
+        var index_in_storagebuy = 0
         for (var o of row.orders){
-            index_in_workbuy++
-            table += '<tr><td>'+row.number+' - '+index_in_workbuy+'</td><td>'+dateTimeFormatter(o.created_at)+'</td><td>'+o.provider.name+'</td><td>'+o.taxpayer.name+'</td><td>'+boolFormatter(o.authorized)+'</td><td></td></tr>'
+            index_in_storagebuy++
+            table += '<tr><td>'+row.number+' - '+index_in_storagebuy+'</td><td>'+dateTimeFormatter(o.created_at)+'</td><td>'+o.provider.name+'</td><td>'+o.taxpayer.name+'</td><td>'+boolFormatter(o.authorized)+'</td><td></td></tr>'
             table += '<tr><td></td><td colspan="4"><table class="table table-sm table-hover table-bordered"><thead><tr><th>Cantidad</th><th>Codigo</th><th>Descripcion</th><th>Precio Unitario</th><th>Total</th></tr></thead><tbody>'
             for (let up of o.order_unregisteredproducts){
                 table += '<tr><td>'+up.amount+'</td><td>'+up.code+'</td><td>'+up.description+'</td><td>$'+up.price+'</td><td>$'+(up.price*up.amount).toFixed(2)+'</td></tr>'
@@ -162,9 +124,9 @@ function detailSheetFormatter(row){
     return ""
 }
 
-var workbuys = {
-    name: "Registro de trabajos",
-    endpoint: "/workbuy",
+var storagebuys = {
+    name: "Autorizaciones de compra",
+    endpoint: "/storagebuy",
     daterange_filters: true,
     table: {
         properties: {
@@ -205,8 +167,8 @@ var workbuys = {
             sortable: true,
             filterControl: 'input',
         }, {
-            field: 'works_number',
-            title: 'Trabajos',
+            field: 'storage.storagetype.name',
+            title: 'Almacen',
             sortable: true,
             filterControl: 'input',
         }, {
@@ -215,23 +177,11 @@ var workbuys = {
             sortable: true,
             filterControl: 'input',
         }, {
-            field: 'works_total',
-            title: 'Vendido',
-            sortable: true,
-            filterControl: 'input',
-            formatter: priceFormatter
-        }, {
             field: 'total',
             title: 'Gastado',
             sortable: true,
             filterControl: 'input',
-            formatter: priceFormatter
-        }, {
-            field: 'earnings',
-            title: 'Utilidad',
-            sortable: true,
-            filterControl: 'input',
-            formatter: priceFormatter
+            formatter: priceFormatter,
         }],
         rowActions: [
             {
@@ -335,4 +285,4 @@ var workbuys = {
     }
 }
 
-export default workbuys;
+export default storagebuys;

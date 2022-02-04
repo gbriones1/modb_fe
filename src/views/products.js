@@ -30,20 +30,6 @@ const baseFormConfig = {
     ]
 }
 
-function productPricesFormatter(value, row, index, field){
-    let product_prices = JSON.parse(localStorage.getItem("product_buy_prices_ids") || "{}");
-    let providers = JSON.parse(localStorage.getItem("provider_ids") || "{}");
-    var result = "";
-    if (product_prices[row.id]){
-        result += '<ul class="list-group">';
-        for (let pp of product_prices[row.id]){
-            result += '<li class="list-group-item">'+providers[pp.provider].name+': $'+(pp.price-pp.discount).toFixed(2)+'</li>';
-        }
-        result += '</ul>';
-    }
-    return result;
-}
-
 const products = {
     name: "Productos",
     endpoint: "/product",
@@ -83,10 +69,6 @@ const products = {
             title: 'Aplicacion',
             sortable: true,
             filterControl: 'input',
-        }, {
-            field: 'providers_price',
-            title: 'Precios',
-            formatter: productPricesFormatter
         }],
         rowActions: [
             {

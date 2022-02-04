@@ -104,6 +104,7 @@ class AppSheet extends Component {
                 </Row>
                 <Row>
                     <Col xs={12}>
+                        <br></br>
                         {this.props.sheetOpts.detailFormatter ? ReactHtmlParser(this.props.sheetOpts.detailFormatter(this.state.data)) : ""}
                     </Col>
                 </Row>

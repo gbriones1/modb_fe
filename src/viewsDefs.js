@@ -13,6 +13,9 @@ import users from "./views/users";
 import workbuys from "./views/workbuys";
 import works from "./views/works";
 import prices from "./views/prices";
+import storagebuys from "./views/storagebuy";
+import storage_orders from "./views/orders_storagebuy";
+import works_by_date from "./views/works_by_date";
 
 var viewsDefs = {
     "organization": organizations,
@@ -27,8 +30,11 @@ var viewsDefs = {
     "customer": customers,
     "employee": employees,
     "workbuy": workbuys,
+    "storagebuy": storagebuys,
     "work_order": orders,
+    "storage_order": storage_orders,
     "work": works,
+    "work_by_date": works_by_date,
     "user": users,
 }
 

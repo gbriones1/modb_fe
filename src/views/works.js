@@ -93,6 +93,14 @@ const baseFormConfig = {
             name: "include_iva",
             label: "Incluir IVA"
         }, {
+            type: "checkbox",
+            name: "requires_invoice",
+            label: "Requiere factura"
+        }, {
+            type: "checkbox",
+            name: "has_credit",
+            label: "Credito"
+        }, {
             type: "number",
             name: "discount",
             label: "Descuento",
@@ -195,7 +203,8 @@ const baseFormConfig = {
 
 function productsRenderer(row){
     if (row && Object.keys(row).length !== 0){
-        var table = '<br><h4>Productos</h4><table class="table table-sm table-hover"><thead><tr><th>Cantidad</th><th>Codigo</th><th>Descripcion</th><th>Precio Unitario</th><th>Total</th></tr></thead><tbody>'
+        var table = '<div class="card"><div class="card-body">'
+        table += '<h4>Productos</h4><table class="table table-sm table-hover"><thead><tr><th>Cantidad</th><th>Codigo</th><th>Descripcion</th><th>Precio Unitario</th><th>Total</th></tr></thead><tbody>'
         for (let up of row.work_unregisteredproducts){
             table += '<tr><td>'+up.amount+'</td><td>'+up.code+'</td><td>'+up.description+'</td><td>$'+up.price.toFixed(2)+'</td><td>$'+(up.price*up.amount).toFixed(2)+'</td></tr>'
         }
@@ -230,7 +239,7 @@ function productsRenderer(row){
                     p = products[customer_products[op.customer_product.id].product.id]
                 }
             }
-            table += '<tr><td>'+op.amount+'</td><td>'+p.code+'</td><td>'+p.name+" - "+p.description+'</td><td>$'+op.price.toFixed(2)+'</td><td>$'+(op.price*op.amount).toFixed(2)+'</td></tr>'
+            table += '<tr><td>'+op.amount+'</td><td>'+op.customer_product.code+'</td><td>'+p.name+" - "+p.description+'</td><td>$'+op.price.toFixed(2)+'</td><td>$'+(op.price*op.amount).toFixed(2)+'</td></tr>'
         }
         table += '</tbody><tfoot><tr><th colspan="4" style="text-align:end;">Sub total</th><th>$'+row.subtotal.toFixed(2)+'</th></tr>'
         if (row.discount){
@@ -241,7 +250,10 @@ function productsRenderer(row){
         }
         table += '<tr><th colspan="4" style="text-align:end;">Total</th><th>$'+row.total.toFixed(2)+'</th></tr>'
         table += '</tfoot></table>'
-        table += '<br><h4>Pagos</h4><table class="table table-sm table-hover"><thead><tr><th>Fecha</th><th>Forma de pago</th><th>Cantidad</th></tr></thead><tbody>'
+        table += '</div></div>'
+        table += '<br>'
+        table += '<div class="card"><div class="card-body">'
+        table += '<h4>Pagos</h4><table class="table table-sm table-hover"><thead><tr><th>Fecha</th><th>Forma de pago</th><th>Cantidad</th></tr></thead><tbody>'
         let totalPay = 0.0;
         for (let p of row.payments){
             totalPay += p.amount
@@ -250,6 +262,7 @@ function productsRenderer(row){
         table += '</tbody><tfoot><tr><th colspan="2" style="text-align:end;">Total Pagado</th><th>$'+totalPay.toFixed(2)+'</th></tr>'
         table += '<tr><th colspan="2" style="text-align:end;">Restante</th><th>$'+(row.total - totalPay).toFixed(2)+'</th></tr>'
         table += '</tfoot></table>'
+        table += '</div></div>'
         return table
     }
     return ""
@@ -260,13 +273,6 @@ function detailViewFormatter(index, row, element){
         return productsRenderer(row)
     }
     return ""
-}
-
-function workbuyIDFormatter(value, row, index, field){
-    if (value){
-        return row.organization.prefix+value
-    }
-    return null
 }
 
 function employeesListFormatter(value, row, index, field){
@@ -289,6 +295,9 @@ var works = {
             pagination: true,
             search: true,
             detailView: true,
+            showColumns: true,
+            showExport: true,
+            exportTypes: ['png', 'csv', 'doc', 'excel', 'xlsx', 'pdf'],
             detailFormatter: detailViewFormatter,
         },
         columns: [{
@@ -308,6 +317,11 @@ var works = {
             filterControl: 'input',
             formatter: dateTimeFormatter,
         }, {
+            field: 'customer.name',
+            title: 'Cliente',
+            sortable: true,
+            filterControl: 'input',
+        }, {
             field: 'unit',
             title: 'Unidad',
             sortable: true,
@@ -326,26 +340,58 @@ var works = {
             field: 'work_employees',
             title: 'Trabajadores',
             sortable: true,
-            filterControl: 'input',
-            formatter: listFormatter
+            formatter: listFormatter,
+            visible: false,
         }, {
-            field: 'invoice_number',
-            title: 'Factura',
+            field: 'comment',
+            title: 'Observaciones',
             sortable: true,
             filterControl: 'input',
+            visible: false,
+        }, {
+            field: 'requires_invoice',
+            title: 'Requiere Factura',
+            sortable: true,
+            formatter: boolFormatter,
+            align: 'center',
+            valign: 'middle',
+            visible: false,
+        }, {
+            field: 'invoice_number',
+            title: 'Numero de Factura',
+            sortable: true,
+            filterControl: 'input',
+            visible: false,
+        }, {
+            field: 'invoice_date',
+            title: 'Fecha de Factura',
+            sortable: true,
+            filterControl: 'input',
+            formatter: dateTimeFormatter,
+            visible: false,
         }, {
             field: 'authorized',
             title: 'Autorizado',
             sortable: true,
             formatter: boolFormatter,
             align: 'center',
-            valign: 'middle'
+            valign: 'middle',
+            visible: false,
+        }, {
+            field: 'has_credit',
+            title: 'Credito',
+            sortable: true,
+            formatter: boolFormatter,
+            align: 'center',
+            valign: 'middle',
+            visible: false,
         }, {
             field: 'total',
             title: 'Total',
             sortable: true,
             filterControl: 'input',
-            formatter: priceFormatter
+            formatter: priceFormatter,
+            visible: false,
         }],
         rowActions: [
             {
@@ -355,7 +401,7 @@ var works = {
                     event: clickView,
                 },
                 modal: {
-                    title: 'Gasto de Trabajo',
+                    title: 'Hoja de Trabajo',
                     size: 'xl',
                     buttons: [
                         {
@@ -435,6 +481,9 @@ var works = {
             title: 'Fecha',
             formatter: dateTimeFormatter,
         }, {
+            field: 'customer.name',
+            title: 'Cliente',
+        }, {
             field: 'unit',
             title: 'Unidad',
         }, {
@@ -453,6 +502,7 @@ var works = {
         }, {
             field: 'total',
             title: 'Total',
+            formatter: priceFormatter,
         }],
         detailFormatter: productsRenderer,
     }

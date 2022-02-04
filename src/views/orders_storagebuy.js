@@ -174,7 +174,7 @@ const baseOrderFormConfig = {
 
 function productsRenderer(row){
     if (row && Object.keys(row).length !== 0){
-        var table = '<br><h4>Productos</h4><table class="table table-sm table-hover"><thead><tr><th>Cantidad</th><th>Codigo</th><th>Descripcion</th><th>Precio Unitario</th><th>Total</th></tr></thead><tbody>'
+        var table = '<br><h4>Productos</h4><table class="table table-sm table-hover"><tr><th>Cantidad</th><th>Codigo</th><th>Descripcion</th><th>Precio Unitario</th><th>Total</th></tr><tbody>'
         for (let up of row.order_unregisteredproducts){
             table += '<tr><td>'+up.amount+'</td><td>'+up.code+'</td><td>'+up.description+'</td><td>$'+up.price.toFixed(2)+'</td><td>$'+(up.price*up.amount).toFixed(2)+'</td></tr>'
         }
@@ -213,6 +213,7 @@ function productsRendererInternal(index, row, element){
         if (percentages.length === 0){
             percentages = JSON.parse(localStorage.getItem("percentage") || "[]")
         }
+
         var table = '<div class="card"><div class="card-body">'
         table += '<h4>Productos</h4><table class="table table-sm table-hover"><thead><tr><th>Cantidad</th><th>Codigo</th><th>Descripcion</th><th>Precio Unitario</th><th>Total</th><th>Precio Sugerido de Venta</th><th>Incremento de precio personalizado:<div class="row"><input class="form-control custom-price-input" type="number" style="width:5em;" value="45"/>%</div></th></tr></thead><tbody>'
         for (let up of row.order_unregisteredproducts){
@@ -257,10 +258,11 @@ function productsRendererInternal(index, row, element){
         }
         table += '<tr><th colspan="4" style="text-align:end;">Total</th><th>$'+row.total.toFixed(2)+'</th></tr>'
         table += '</tfoot></table>'
+        table += '</tfoot></table>'
         table += '</div></div>'
         table += '<br>'
         table += '<div class="card"><div class="card-body">'
-        table += '<h4>Pagos</h4><table class="table table-sm table-hover"><thead><tr><th>Fecha</th><th>Forma de pago</th><th>Cantidad</th></tr></thead><tbody>'
+        table += '<br><h4>Pagos</h4><table class="table table-sm table-hover"><thead><tr><th>Fecha</th><th>Forma de pago</th><th>Cantidad</th></tr></thead><tbody>'
         let totalPay = 0.0;
         for (let p of row.payments){
             totalPay += p.amount
@@ -283,13 +285,13 @@ function detailViewFormatter(index, row, element){
 }
 
 function indexFormatter(value, row, index, field){
-    return row.workbuy_number + " - " +(index+1)
+    return row.storagebuy_number + " - " +(index+1)
 }
 
-var orders = {
-    name: "Ordenes de compra para trabajos",
+var storage_orders = {
+    name: "Ordenes de compra para autorizaciones",
     endpoint: "/order",
-    buyIds_filters: true,
+    storageBuyIds_filters: true,
     table: {
         properties: {
             filterControl: true,
@@ -480,4 +482,4 @@ var orders = {
     }
 }
 
-export default orders;
+export default storage_orders;

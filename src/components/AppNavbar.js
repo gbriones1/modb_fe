@@ -81,7 +81,10 @@ const AppNavbar = ({ user }) => {
                         <NavDropdown.Divider />
                         <NavDropdown.Header>Ventas</NavDropdown.Header>
                         <LinkContainer to="/work">
-                            <NavDropdown.Item>Hojas de Trabajo</NavDropdown.Item>
+                            <NavDropdown.Item>Hojas de Trabajo por Registro</NavDropdown.Item>
+                        </LinkContainer>
+                        <LinkContainer to="/work_by_date">
+                            <NavDropdown.Item>Hojas de Trabajo por Fecha</NavDropdown.Item>
                         </LinkContainer>
                     </NavDropdown>
                     <NavDropdown title="Trabajos" id="basic-nav-dropdown">
