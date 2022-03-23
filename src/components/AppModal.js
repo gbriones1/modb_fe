@@ -14,7 +14,7 @@ const AppModal = ({ name, config, dataEndpoint, setNotifications }) => {
     // console.log("Rendering modal", name, config, dataEndpoint)
     var formTableModals = []
     if (config.content.type === 'form'){
-        for (let field of config.content.config.fields){
+        for (let field of config.content.config.fields || []){
             if (field.type === 'formTable'){
                 var modalConfig = {
                     title: field.label,

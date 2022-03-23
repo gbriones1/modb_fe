@@ -24,7 +24,7 @@ class ModalButton extends Component {
     render() {
         return (
             <>
-                <Button variant={this.props.config.button.variant} size="lg" data-bs-toggle="modal" data-bs-target={"#"+this.props.config.name} ><i className={this.props.config.button.icon[0]+' fa-'+this.props.config.button.icon[1]}></i></Button>
+                {this.props.config.button && <Button variant={this.props.config.button.variant} size="lg" data-bs-toggle="modal" data-bs-target={"#"+this.props.config.name} ><i className={this.props.config.button.icon[0]+' fa-'+this.props.config.button.icon[1]}></i></Button>}
                 <AppModal name={this.props.config.name} config={this.props.config.modal} dataEndpoint={this.props.endpoint} setNotifications={this.props.setNotifications}></AppModal>
             </>
         );

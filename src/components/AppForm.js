@@ -74,7 +74,7 @@ const InputCheckbox = ({ fieldOpts, formName }) => {
         <Form.Group as={Row} className="mb-3 form-field" controlId={formName+"_"+fieldOpts.name}>
             <Form.Label column sm={2}>{fieldOpts.label}</Form.Label>
             <Col sm={10} className="align-self-center">
-                <Form.Check type="checkbox" name={fieldOpts.name} />
+                <Form.Check type="checkbox" name={fieldOpts.name} defaultChecked={fieldOpts.defaultValue || false}/>
                 <Form.Text className="text-muted">
                 {fieldOpts.description}
                 </Form.Text>
@@ -331,7 +331,7 @@ const AppForm = ({ name, config }) => {
     }
     return (
         <Form onSubmit={handleSubmit} className={config.className}>
-            {config.fields.map((field, i) => {
+            {(config.fields || []).map((field, i) => {
                 switch (field.type){
                     case 'hidden':
                         return <InputHidden fieldOpts={ field } formName={ name } key={Math.random().toString(16).slice(2)}></InputHidden>

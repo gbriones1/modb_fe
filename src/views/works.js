@@ -125,6 +125,7 @@ const baseFormConfig = {
                     name: "amount",
                     label: "Cantidad",
                     type: "number",
+                    defaultValue: 1
                 }, {
                     name: "code",
                     label: "Codigo",

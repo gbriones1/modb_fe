@@ -14,7 +14,7 @@ const TablePage = ({ history, setToken, setNotifications }) => {
     console.log("Rendering Dashboard Page", model, currentDef)
     if (currentDef) {
         var tableOpts = currentDef.table || {};
-        var modalButtons = currentDef.modalButtons || {}
+        var modalButtons = currentDef.modalButtons || [];
         return (
             <Container fluid>
                 {currentDef.daterange_filters ? <AppDateRangeFilter history={history}></AppDateRangeFilter> : ""}

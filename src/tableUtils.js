@@ -219,7 +219,7 @@ function cacheData(endpoint, data){
             result[$(this).attr("name")] = value;
         });
         form.find("select").each(function(){
-            result[$(this).attr("name")] = parseInt($(this).val()) || $(this).val();
+            result[$(this).attr("name")] = parseInt($(this).val()) || $(this).val() || null;
         });
         return result
     };
@@ -306,34 +306,31 @@ function debugFormatter(value, row, index, field){
     return 'Debug'
 }
 
-function clickEdit (e, fieldValue, data, index) {
-    let modal =  $(".modal#edit");
-    let form = modal.find("form");
+function updateFormData(form, data){
     form[0].reset();
     form.trigger("reset");
-    modal.attr('obj-id', data.id);
     form.find('select').each(function (){
         $(this).val("");
     });
+    form.data(data)
     for (var key in data){
         var value = data[key];
-        if (key === "date"){
-            if (value.length === 10){
-                value += " 00:00"
-            }
-            var d = new Date(value);
-            if (form.find('input[name="'+ key +'"]').attr('type') === "datetime-local"){
-                value = d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)+"T"+("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2)+":"+("0"+d.getSeconds()).slice(-2);
-            }
-            else{
-                value = d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2);
-            }
-        } else if (typeof(data[key]) == "object"){
-            if (data[key]){
-                value = JSON.stringify(data[key]);
+        form.find('input[name="'+ key +'"]').val(value);
+        var field = form.find('input[name="'+ key +'"]');
+        if (typeof(value) == "object"){
+            if (value){
+                // value = JSON.stringify(data[key]);
                 if (!Array.isArray(data[key])){
                     form.find('select[name="'+ key +'_id"]').val(data[key]["id"]);
                     form.find('input[name="'+ key +'_name"]').val(data[key]["name"]);
+                } else {
+                    // value = JSON.parse(value)
+                    if (field.data('type') === 'form-table'){
+                        formTableUpdate(form, key, value)
+                    }
+                    if (field.data('type') === 'multichoice'){
+                        multiChoiceUpdate(form, key, value, data)
+                    }
                 }
                 // if (Array.isArray(data[key])){
                 //     value = JSON.stringify(data[key]);
@@ -349,46 +346,56 @@ function clickEdit (e, fieldValue, data, index) {
                 //     value = JSON.stringify(data[key]);
                 // }
             }
-            else{
-                value = ""
+        } else {
+            if (key === "date"){
+                if (value.length === 10){
+                    value += " 00:00"
+                }
+                var d = new Date(value);
+                if (form.find('input[name="'+ key +'"]').attr('type') === "datetime-local"){
+                    value = d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)+"T"+("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2)+":"+("0"+d.getSeconds()).slice(-2);
+                }
+                else{
+                    value = d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2);
+                }
             }
-        }
-        form.find('input[name="'+ key +'"]').val(value);
-        var field = form.find('input[name="'+ key +'"]');
-        if (field.data('type') === 'form-table'){
-            formTableUpdate(form, key, JSON.parse(value))
-        }
-        if (field.data('type') === 'multichoice'){
-            multiChoiceUpdate(form, key, JSON.parse(value), data)
-        }
-        if (field.attr("type") === "checkbox"){
-            if (value === "Si" || value === "True" || value === true){
-                field.prop('checked', true);
-            }else {
-                field.prop('checked', false);
+            if (field.attr("type") === "checkbox"){
+                if (value === "Si" || value === "True" || value === true){
+                    field.prop('checked', true);
+                }else {
+                    field.prop('checked', false);
+                }
             }
+            // var selected = ''
+            // if ("id" in data){
+            //     // eslint-disable-next-line
+            //     form.find('select[name="'+ key +'_id"] option').each(function (){
+            //         if (parseInt($(this).val()) === data[key]){
+            //             selected = $(this).val()
+            //         }
+            //     });
+            // } else {
+                // eslint-disable-next-line
+                // form.find('select[name="'+ key +'_id"] option').each(function (){
+                //     if (parseInt($(this).val()) === data[key]["id"]){
+                //         selected = $(this).val()
+                //     }
+                // });
+            // }
+            form.find('select[name="'+ key +'"]').val(value);
+            form.find('input[type="checkbox"]').each(function () {
+                $(this).val(true)
+            });
         }
-        // var selected = ''
-        // if ("id" in data){
-        //     // eslint-disable-next-line
-        //     form.find('select[name="'+ key +'_id"] option').each(function (){
-        //         if (parseInt($(this).val()) === data[key]){
-        //             selected = $(this).val()
-        //         }
-        //     });
-        // } else {
-            // eslint-disable-next-line
-            // form.find('select[name="'+ key +'_id"] option').each(function (){
-            //     if (parseInt($(this).val()) === data[key]["id"]){
-            //         selected = $(this).val()
-            //     }
-            // });
-        // }
-        // form.find('select[name="'+ key +'_id"]').val(selected);
-        form.find('input[type="checkbox"]').each(function () {
-            $(this).val(true)
-        });
     }
+
+}
+
+function clickEdit (e, fieldValue, data, index) {
+    let modal =  $(".modal#edit");
+    let form = modal.find("form");
+    modal.attr('obj-id', data.id);
+    updateFormData(form, data);
 }
 
 function clickDelete (e, value, data, index) {
@@ -519,8 +526,16 @@ function doFormTableUpdate (url, method, modalName, btnName, successHook){
     let form = modal.find("form");
     let [fieldName, parentFormName] = modalName.split("-")
     let parentForm = $(".modal#"+parentFormName+" form");
-    let data = parentForm.serializeObject()[fieldName];
-    data.push(form.serializeObject());
+    let data = {}
+    if (form.data("isEdit") !== undefined){
+        var field = parentForm.find('[name="'+fieldName+'"]');
+        data = JSON.parse(field.val())
+        data[form.data("isEdit")] = form.serializeObject()
+        data[form.data("isEdit")].id = form.data("id")
+    } else {
+        data = parentForm.serializeObject()[fieldName];
+        data.push(form.serializeObject());
+    }
     formTableUpdate(parentForm, fieldName, data);
     // modal.find('[data-bs-dismiss="modal"]').trigger({type: "click"})
     form[0].reset();
@@ -528,6 +543,7 @@ function doFormTableUpdate (url, method, modalName, btnName, successHook){
     form.find('select').each(function (){
         $(this).val("");
     });
+    form.removeData()
 }
 
 function doPrint(url, method, modalName, btnName, successHook){
@@ -543,46 +559,53 @@ function formTableUpdate (form, fieldName, data){
     var tbody = table.find("tbody");
     tbody.empty()
     var index = 0;
-    for (var subData of data){
-        var tr = $('<tr>')
-        // eslint-disable-next-line
-        headers.children().each(function () {
-            var columnDef = $(this).data();
-            if (columnDef.field){
-                var style = "";
-                var text = subData[columnDef.field];
-                if (columnDef.type === "checkbox"){
-                    style += 'text-align: center; '
-                    if (text){
-                        text = '<i class="far fa-check-circle"></i>';
-                    } else {
-                        text = '<i class="far fa-times-circle"></i>';
-                    }
-                }
-                if (text === null){
-                    text = ""
-                }
-                else {
-                    if (columnDef.type === "select"){
-                        text = ""
-                        if ("id" in subData){
-                            text = (subData[columnDef.field.replace("_id", "")] || {name:""}).name
+    if ("id" in data){
+        console.log("is edit")
+    } else {
+        for (var subData of data){
+            var tr = $('<tr>')
+            // eslint-disable-next-line
+            headers.children().each(function () {
+                var columnDef = $(this).data();
+                if (columnDef.field){
+                    var style = "";
+                    var text = subData[columnDef.field];
+                    if (columnDef.type === "checkbox"){
+                        style += 'text-align: center; '
+                        if (text){
+                            text = '<i class="far fa-check-circle"></i>';
                         } else {
-                            let cached = JSON.parse(localStorage.getItem(columnDef.config.endpoint+"_ids"));
-                            if (cached){
-                                text = cached[subData[columnDef.field]].name
+                            text = '<i class="far fa-times-circle"></i>';
+                        }
+                    }
+                    if (text === null){
+                        text = ""
+                    }
+                    else {
+                        if (columnDef.type === "select"){
+                            text = ""
+                            if ("id" in subData && subData.id && subData[columnDef.field.replace("_id", "")] !== undefined){
+                                console.log(subData[columnDef.field.replace("_id", "")])
+                                text = (subData[columnDef.field.replace("_id", "")] || {name:""}).name
                             } else {
-                                text = subData[columnDef.field]
+                                let cached = JSON.parse(localStorage.getItem(columnDef.config.endpoint+"_ids"));
+                                if (cached){
+                                    text = cached[subData[columnDef.field]].name
+                                } else {
+                                    text = subData[columnDef.field]
+                                }
                             }
                         }
                     }
+                    tr.append('<td style="'+style+'">'+text+'</td>');
                 }
-                tr.append('<td style="'+style+'">'+text+'</td>');
-            }
-        });
-        tr.append('<td><button type="buttton" class="btn btn-sm btn-danger formTable-remove" data-index="'+index+'"><i class="far fa-trash-alt"></i></button></td>');
-        index++;
-        tbody.append(tr);
+            });
+            tr.append('<td><button type="buttton" class="btn btn-sm btn-success formTable-edit" data-bs-toggle="modal" data-bs-dismiss="modal" data-bs-target="#'+fieldName+'-'+form.closest('.modal').attr('id')+'" data-index="'+index+'"><i class="far fa-edit"></i></button><button type="buttton" class="btn btn-sm btn-danger formTable-remove" data-index="'+index+'"><i class="far fa-trash-alt"></i></button></td>');
+            tr.data(subData)
+            // console.log(tr.data())
+            index++;
+            tbody.append(tr);
+        }
     }
     field.val(JSON.stringify(data))
 }
@@ -749,9 +772,18 @@ $(document).on('click', '.formTable-remove', function(){
     formTableUpdate($(this).closest("form"), fieldName, data);
 })
 
+$(document).on('click', '.formTable-edit', function(){
+    let target = $(this).data().bsTarget;
+    let data = $(this).closest('tr').data();
+    data.isEdit = $(this).data().index;
+    let modal =  $(".modal"+target);
+    let form = modal.find("form");
+    updateFormData(form, data);
+})
+
 // $(document).on('click', 'button[data-bs-toggle="dropdown"]', function(){
 //     let menu = $(this).closest('div').find('.dropdown-menu')
 //     menu.toggleClass('show')
 // })
 
-export { defaultNewModal, defaultEditModal, defaultMultiDeleteModal, defaultDeleteSingleModal, cachableEndpoints, nameListGetter, dateTimeFormatter, priceFormatter, listFormatter, fetchIDNameFormatter, boolFormatter, showDetailFormatter, debugFormatter, clickEdit, clickDelete, clickView, doREST, doFormTableUpdate, doPrint, cacheData }
+export { defaultNewModal, defaultEditModal, defaultMultiDeleteModal, defaultDeleteSingleModal, cachableEndpoints, nameListGetter, dateTimeFormatter, priceFormatter, listFormatter, fetchIDNameFormatter, boolFormatter, showDetailFormatter, debugFormatter, clickEdit, clickDelete, clickView, doREST, doFormTableUpdate, doPrint, cacheData, handleAPIErrors }
