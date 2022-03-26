@@ -446,30 +446,30 @@ var works_by_date = {
         ],
     },
     modalButtons: [
-        {
-            name: "new",
-            button: {
-                icon: ["far", "plus-square"],
-                variant: "primary",
-            },
-            modal: {
-                title: 'Nuevo',
-                size: 'xl',
-                buttons: [
-                    {
-                        name: "do-new",
-                        text: "Crear",
-                        variant: "primary",
-                        method: "POST",
-                        onClick: doREST,
-                    }
-                ],
-                content: {
-                    type: "form",
-                    config: baseFormConfig
-                }
-            }
-        },
+        // {
+        //     name: "new",
+        //     button: {
+        //         icon: ["far", "plus-square"],
+        //         variant: "primary",
+        //     },
+        //     modal: {
+        //         title: 'Nuevo',
+        //         size: 'xl',
+        //         buttons: [
+        //             {
+        //                 name: "do-new",
+        //                 text: "Crear",
+        //                 variant: "primary",
+        //                 method: "POST",
+        //                 onClick: doREST,
+        //             }
+        //         ],
+        //         content: {
+        //             type: "form",
+        //             config: baseFormConfig
+        //         }
+        //     }
+        // },
         defaultMultiDeleteModal
     ],
     sheet: {

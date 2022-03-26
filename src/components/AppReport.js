@@ -26,10 +26,14 @@ class AppReport extends Component {
                 }
                 for (let row of data){
                     for (let w of row.works){
-                        report[row.organization.id].sells += w.total
+                        if (w.authorized){
+                            report[row.organization.id].sells += w.total
+                        }
                     }
                     for (let o of row.orders){
-                        report[row.organization.id].buys += o.total
+                        if (o.authorized){
+                            report[row.organization.id].buys += o.total
+                        }
                     }
                 }
                 for (let o of organizations){

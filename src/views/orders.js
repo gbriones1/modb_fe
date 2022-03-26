@@ -428,30 +428,30 @@ var orders = {
         ],
     },
     modalButtons: [
-        {
-            name: "new",
-            button: {
-                icon: ["far", "plus-square"],
-                variant: "primary",
-            },
-            modal: {
-                title: 'Nuevo',
-                size: 'xl',
-                buttons: [
-                    {
-                        name: "do-new",
-                        text: "Crear",
-                        variant: "primary",
-                        method: "POST",
-                        onClick: doREST,
-                    }
-                ],
-                content: {
-                    type: "form",
-                    config: baseOrderFormConfig
-                }
-            }
-        },
+        // {
+        //     name: "new",
+        //     button: {
+        //         icon: ["far", "plus-square"],
+        //         variant: "primary",
+        //     },
+        //     modal: {
+        //         title: 'Nuevo',
+        //         size: 'xl',
+        //         buttons: [
+        //             {
+        //                 name: "do-new",
+        //                 text: "Crear",
+        //                 variant: "primary",
+        //                 method: "POST",
+        //                 onClick: doREST,
+        //             }
+        //         ],
+        //         content: {
+        //             type: "form",
+        //             config: baseOrderFormConfig
+        //         }
+        //     }
+        // },
         defaultMultiDeleteModal
     ],
     sheet: {

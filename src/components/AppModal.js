@@ -9,7 +9,7 @@ const AppModal = ({ name, config, dataEndpoint, setNotifications }) => {
     const history = useHistory()
     function reloadPage() {
         console.log("Reload page")
-        history.push(location);
+        history.replace(location);
     }
     // console.log("Rendering modal", name, config, dataEndpoint)
     var formTableModals = []
