@@ -298,6 +298,7 @@ var works_by_date = {
             showColumns: true,
             showExport: true,
             exportTypes: ['png', 'csv', 'doc', 'excel', 'xlsx', 'pdf'],
+            pageList: [10, 25, 50, 100, "all"],
             detailFormatter: detailViewFormatter,
         },
         columns: [{
