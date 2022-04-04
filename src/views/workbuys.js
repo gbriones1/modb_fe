@@ -7,7 +7,7 @@ const $ = require('jquery');
 let products = JSON.parse(localStorage.getItem("product_ids") || "{}");
 let provider_products = JSON.parse(localStorage.getItem("provider_products_ids") || "{}");
 let customer_products = JSON.parse(localStorage.getItem("customer_products_ids") || "{}");
-let providers = JSON.parse(localStorage.getItem("provider") || "{}");
+let providers = JSON.parse(localStorage.getItem("provider") || "[]");
 
 let provider_options = ""
 for (let p of providers){
