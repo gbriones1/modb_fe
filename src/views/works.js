@@ -60,6 +60,10 @@ function multichoiceEmployeeFormatter(data){
 const baseFormConfig = {
     fields: [
         {
+            type: "datetime",
+            name: "created_at",
+            label: "Fecha",
+        }, {
             type: "text",
             name: "number",
             label: "Folio",

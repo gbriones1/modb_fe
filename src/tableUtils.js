@@ -208,6 +208,9 @@ function cacheData(endpoint, data){
             else if ($(this).attr("type") === "date"){
                 value = value || null
             }
+            else if ($(this).attr("type") === "datetime-local"){
+                value = (new Date(value)).toISOString() || null
+            }
             else if ($(this).attr("type") === "hidden"){
                 if ($(this).data().type === "form-table"){
                     value = JSON.parse(value || "[]");
@@ -315,8 +318,8 @@ function updateFormData(form, data){
     form.data(data)
     for (var key in data){
         var value = data[key];
-        form.find('input[name="'+ key +'"]').val(value);
         var field = form.find('input[name="'+ key +'"]');
+        field.val(value);
         if (typeof(value) == "object"){
             if (value){
                 // value = JSON.stringify(data[key]);
@@ -347,17 +350,18 @@ function updateFormData(form, data){
                 // }
             }
         } else {
-            if (key === "date"){
+            if (key === "date" || key === "created_at"){
                 if (value.length === 10){
                     value += " 00:00"
                 }
                 var d = new Date(value);
-                if (form.find('input[name="'+ key +'"]').attr('type') === "datetime-local"){
+                if (field.attr('type') === "datetime-local"){
                     value = d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)+"T"+("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2)+":"+("0"+d.getSeconds()).slice(-2);
                 }
                 else{
                     value = d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2);
                 }
+                field.val(value)
             }
             if (field.attr("type") === "checkbox"){
                 if (value === "Si" || value === "True" || value === true){
@@ -781,9 +785,17 @@ $(document).on('click', '.formTable-edit', function(){
     updateFormData(form, data);
 })
 
+$(document).on('click', '.formTable-new', function(){
+    let target = $(this).data().bsTarget;
+    let data = {isEdit: undefined}
+    let modal =  $(".modal"+target);
+    let form = modal.find("form");
+    updateFormData(form, data);
+})
+
 // $(document).on('click', 'button[data-bs-toggle="dropdown"]', function(){
 //     let menu = $(this).closest('div').find('.dropdown-menu')
 //     menu.toggleClass('show')
 // })
 
-export { defaultNewModal, defaultEditModal, defaultMultiDeleteModal, defaultDeleteSingleModal, cachableEndpoints, nameListGetter, dateTimeFormatter, priceFormatter, listFormatter, fetchIDNameFormatter, boolFormatter, showDetailFormatter, debugFormatter, clickEdit, clickDelete, clickView, doREST, doFormTableUpdate, doPrint, cacheData, handleAPIErrors }
+export { defaultNewModal, defaultEditModal, defaultMultiDeleteModal, defaultDeleteSingleModal, cachableEndpoints, nameListGetter, dateTimeFormatter, priceFormatter, listFormatter, fetchIDNameFormatter, boolFormatter, showDetailFormatter, debugFormatter, clickEdit, clickDelete, clickView, doREST, doFormTableUpdate, doPrint, cacheData, handleAPIErrors, updateFormData }

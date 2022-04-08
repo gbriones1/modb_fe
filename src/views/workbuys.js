@@ -1,4 +1,4 @@
-import { clickView, dateTimeFormatter, priceFormatter, defaultDeleteSingleModal, defaultMultiDeleteModal, doREST, clickEdit, boolFormatter, doPrint, handleAPIErrors } from "../tableUtils";
+import { clickView, dateTimeFormatter, priceFormatter, defaultDeleteSingleModal, defaultMultiDeleteModal, doREST, clickEdit, boolFormatter, doPrint, handleAPIErrors, updateFormData } from "../tableUtils";
 import history from "../history";
 import config from "../config";
 
@@ -25,13 +25,45 @@ $(document).on('click', 'button.work-nav', function(){
 })
 
 $(document).on('click', 'button.custom-view', function(){
-    console.log($(this).data());
+    // console.log($(this).data());
     let iframe =  $("iframe.view-iframe");
     iframe.attr('src', $(this).data().endpoint+"/"+$(this).data().objectId)
 })
 
+$(document).on('click', 'button.order-edit', function(){
+    let data = $(this).data('object');
+    let modal = $('#order-edit.modal');
+    let form = modal.find('form');
+    modal.attr("obj-id", data.id)
+    updateFormData(form, data)
+})
+
+$(document).on('click', 'button.order_products', function(){
+    let data = $(this).data('object');
+    let modal = $('#order_products.modal');
+    let form = modal.find('form');
+    modal.attr("obj-id", data.id)
+    updateFormData(form, data)
+})
+
+$(document).on('click', 'button.work-edit', function(){
+    let data = $(this).data('object');
+    let modal = $('#work-edit.modal');
+    let form = modal.find('form');
+    modal.attr("obj-id", data.id)
+    updateFormData(form, data)
+})
+
+$(document).on('click', 'button.work_products', function(){
+    let data = $(this).data('object');
+    let modal = $('#work_products.modal');
+    let form = modal.find('form');
+    modal.attr("obj-id", data.id)
+    updateFormData(form, data)
+})
+
 $(document).on('click', 'button.work-order', function(){
-    console.log($(this).data('object'));
+    // console.log($(this).data('object'));
     let modal = $('#work-order.modal');
     let form = modal.find('form');
     let data = $(this).data('object');
@@ -133,26 +165,75 @@ const baseFormConfig = {
     ]
 }
 
+function multichoiceProviderProductFormatter(data){
+    if (data.product){
+        try {
+            var product = products[data.product.id];
+            return data.code +" - "+ product.name + " - " + product.description
+        } catch {
+            products = JSON.parse(localStorage.getItem("product_ids") || "{}");
+            let product = products[data.product.id];
+            if (product){
+                return data.code +" - "+ product.name + " - " + product.description
+            }
+            return data.code
+        }
+    }
+}
+
+function multichoiceProductFormatter(data){
+    if (data.product){
+        try {
+            var product = products[data.product.id];
+            return data.code +" - "+ product.name + " - " + product.description
+        } catch {
+            products = JSON.parse(localStorage.getItem("product_ids") || "{}");
+            let product = products[data.product.id];
+            if (product){
+                return data.code +" - "+ product.name + " - " + product.description
+            }
+            return data.code
+        }
+    }
+}
+
+function multichoiceOtherProductFormatter(data){
+    return data.code +" - "+ data.name + " - " + data.description
+}
+
+function multichoiceEmployeeFormatter(data){
+    return data.name
+}
+
 function detailViewFormatter(index, row, element){
     var table = '<div class="card"><div class="card-body">'
-    table += '<div class="row"><div class="col"><h4>Ordenes de Compra</h4></div><div class="col-md-2"><button type="button" class="btn btn-success order-nav" data-id="'+row.id+'"><i class="far fa-edit" style="width: 14px;"></i></button></div></div>'
-    table += '<table class="table table-sm table-hover"><tr><th>Folio</th><th>Proveedor</th><th>Razon social</th><th>Autorizado</th><th>Total</th><th>Ver</th></tr><tbody>'
+    table += '<div class="row"><div class="col"><h4>Ordenes de Compra</h4></div><div class="col-md-2">'
+    // table += '<button type="button" class="btn btn-success order-nav" data-id="'+row.id+'"><i class="far fa-edit" style="width: 14px;"></i></button>'
+    table += '</div></div>'
+    table += '<table class="table table-sm table-hover"><tr><th>Folio</th><th>Proveedor</th><th>Razon social</th><th>Autorizado</th><th>Total</th><th>Acciones</th></tr><tbody>'
     var index_in_workbuy = 0
     for (let o of row.orders){
         index_in_workbuy++
         table += '<tr><td>'+row.number+' - '+index_in_workbuy+'</td><td>'+o.provider.name+'</td><td>'+o.taxpayer.name+'</td><td>'+boolFormatter(o.authorized)+'</td><td>$'+o.total.toFixed(2)+'</td><td>'
         table += '<button type="button" class="btn btn-info custom-view" data-endpoint="work_order" data-object-id="'+o.id+'" data-bs-toggle="modal" data-bs-target="#view"><i class="far fa-eye" style="width: 14px;"></i></button>'
+        table += '<button type="button" class="btn btn-primary order-edit" data-object=\''+JSON.stringify(o)+'\' data-bs-toggle="modal" data-bs-target="#order-edit"><i class="fas fa-edit" style="width: 14px;"></i></button>'
+        table += '<button type="button" class="btn btn-primary order_products" data-object=\''+JSON.stringify(o)+'\' data-bs-toggle="modal" data-bs-target="#order_products"><i class="fas fa-clipboard-list" style="width: 14px;"></i></button>'
+        // table += '<button type="button" class="btn btn-primary order-work" data-object=\''+JSON.stringify(o)+'\' data-bs-toggle="modal" data-bs-target="#order-work"><i class="fas fa-tools" style="width: 14px;"></i></button>'
         table += '</td></tr>'
     }
     table += '</tbody></table>'
     table += '</div></div>'
     table += '<div class="card"><div class="card-body">'
-    table += '<div class="row"><div class="col"><h4>Hojas de trabajo</h4></div><div class="col-md-2"><button type="button" class="btn btn-success work-nav" data-id="'+row.id+'"><i class="far fa-edit" style="width: 14px;"></i></button></div></div>'
-    table += '<table class="table table-sm table-hover"><tr><th>Numero</th><th>Unidad</th><th>Modelo</th><th>Razon social</th><th>Autorizado</th><th>Total</th><th>Ver</th></tr><tbody>'
+    table += '<div class="row"><div class="col"><h4>Hojas de trabajo</h4></div><div class="col-md-2">'
+    // table += '<button type="button" class="btn btn-success work-nav" data-id="'+row.id+'"><i class="far fa-edit" style="width: 14px;"></i></button>'
+    table += '</div></div>'
+    table += '<table class="table table-sm table-hover"><tr><th>Numero</th><th>Unidad</th><th>Modelo</th><th>Razon social</th><th>Autorizado</th><th>Total</th><th>Acciones</th></tr><tbody>'
     for (let o of row.works){
         // objData = JSON.stringify(o)
         table += '<tr><td>'+o.number+'</td><td>'+o.unit+'</td><td>'+o.model+'</td><td>'+o.taxpayer.name+'</td><td>'+boolFormatter(o.authorized)+'</td><td>$'+o.total.toFixed(2)+'</td><td>'
         table += '<button type="button" class="btn btn-info custom-view" data-endpoint="work" data-object-id="'+o.id+'" data-bs-toggle="modal" data-bs-target="#view"><i class="far fa-eye" style="width: 14px;"></i></button>'
+        table += '<button type="button" class="btn btn-primary work-edit" data-object=\''+JSON.stringify(o)+'\' data-bs-toggle="modal" data-bs-target="#work-edit"><i class="fas fa-edit" style="width: 14px;"></i></button>'
+        table += '<button type="button" class="btn btn-primary work_products" data-object=\''+JSON.stringify(o)+'\' data-bs-toggle="modal" data-bs-target="#work_products"><i class="fas fa-clipboard-list" style="width: 14px;"></i></button>'
         table += '<button type="button" class="btn btn-primary work-order" data-object=\''+JSON.stringify(o)+'\' data-bs-toggle="modal" data-bs-target="#work-order"><i class="fas fa-shopping-cart" style="width: 14px;"></i></button>'
         table += '</td></tr>'
     }
@@ -207,6 +288,14 @@ function detailSheetFormatter(row){
         return table
     }
     return ""
+}
+
+function doOrderREST (endpoint, method, modalName, btnName, successHook, setNotifications) {
+    doREST("/order", method, modalName, btnName, successHook, setNotifications)
+}
+
+function doWorkREST (endpoint, method, modalName, btnName, successHook, setNotifications) {
+    doREST("/work", method, modalName, btnName, successHook, setNotifications)
 }
 
 function doWorkOrder (endpoint, method, modalName, btnName, successHook, setNotifications) {
@@ -269,6 +358,7 @@ var workbuys = {
             showColumns: true,
             showExport: true,
             exportTypes: ['png', 'csv', 'doc', 'excel', 'xlsx', 'pdf'],
+            pageList: [10, 25, 50, 100, "all"],
             detailFormatter: detailViewFormatter,
             // responseHandler: responseHandler
         },
@@ -406,6 +496,366 @@ var workbuys = {
         },
         defaultMultiDeleteModal,
         {
+            name: "order-edit",
+            modal: {
+                title: 'Editar orden de compra',
+                size: 'xl',
+                buttons: [
+                    {
+                        name: "do-order-edit",
+                        text: "Guardar",
+                        variant: "primary",
+                        method: "PUT",
+                        onClick: doOrderREST,
+                    }
+                ],
+                content: {
+                    type: "form",
+                    config: {
+                        fields: [
+                            {
+                                type: "hidden",
+                                name: "provider",
+                            }, {
+                                type: "select",
+                                name: "taxpayer_id",
+                                label: "RFC",
+                                endpoint: "taxpayer"
+                            }, {
+                                type: "select",
+                                name: "claimant_id",
+                                label: "Recolector",
+                                endpoint: "employee"
+                            }, {
+                                type: "text",
+                                name: "invoice_number",
+                                label: "Numero de factura",
+                            }, {
+                                type: "date",
+                                name: "invoice_date",
+                                label: "Fecha de factura",
+                            }, {
+                                type: "checkbox",
+                                name: "authorized",
+                                label: "Autorizado"
+                            }, {
+                                type: "checkbox",
+                                name: "include_iva",
+                                label: "Incluir IVA"
+                            }, {
+                                type: "number",
+                                name: "discount",
+                                label: "Descuento",
+                                step: 0.01
+                            }, {
+                                type: "text",
+                                name: "comment",
+                                label: "Observaciones",
+                            }
+                        ]
+                    }
+                }
+            }
+        }, {
+            name: "order_products",
+            modal: {
+                title: 'Editar productos de orden de compra',
+                size: 'xl',
+                buttons: [
+                    {
+                        name: "do-order_products",
+                        text: "Guardar",
+                        variant: "primary",
+                        method: "PUT",
+                        onClick: doOrderREST,
+                    }
+                ],
+                content: {
+                    type: "form",
+                    config: {
+                        fields: [
+                            {
+                                type: "formTable",
+                                name: "order_unregisteredproducts",
+                                label: "Productos no registrados",
+                                fields: [
+                                    {
+                                        name: "amount",
+                                        label: "Cantidad",
+                                        type: "number",
+                                        defaultValue: 1,
+                                        step: 1
+                                    }, {
+                                        name: "code",
+                                        label: "Codigo",
+                                        type: "text",
+                                    }, {
+                                        name: "description",
+                                        label: "Descripcion",
+                                        type: "text",
+                                    }, {
+                                        name: "price",
+                                        label: "Precio Unitario",
+                                        type: "number",
+                                        defaultValue: 0.0,
+                                        step: 0.01
+                                    }, 
+                                ],
+                            }, {
+                                type: "multichoice",
+                                name: "order_provider_products",
+                                label: "Productos registrados",
+                                endpoint: "provider",
+                                subfield: "provider_products",
+                                formatter: multichoiceProviderProductFormatter,
+                                fields: [
+                                    {
+                                        name: "amount",
+                                        label: "Cantidad",
+                                        type: "number",
+                                    }, {
+                                        name: "price",
+                                        label: "Precio",
+                                        type: "number",
+                                    }, 
+                                ],
+                                filterMap: {
+                                    "provider": "provider"
+                                }
+                            }, {
+                                type: "formTable",
+                                name: "payments",
+                                label: "Pagos",
+                                fields: [
+                                    {
+                                        name: "date",
+                                        label: "Fecha",
+                                        type: "date",
+                                    }, {
+                                        name: "amount",
+                                        label: "Cantidad",
+                                        type: "number",
+                                    }, {
+                                        name: "method",
+                                        label: "Forma de pago",
+                                        type: "select",
+                                        endpoint: "payment_method" 
+                                    },
+                                ],
+                            }
+                        ]
+                    }
+                }
+            }
+        }, {
+            name: "order-work",
+            modal: {
+                title: 'Orden de compra a trabajo',
+                size: 'xl',
+                buttons: [
+                    {
+                        name: "do-order-work",
+                        text: "Crear",
+                        variant: "primary",
+                        method: "POST",
+                        onClick: null,
+                    }
+                ],
+                content: {
+                    type: "form",
+                    config: {}
+                }
+            }
+        }, {
+            name: "work-edit",
+            modal: {
+                title: 'Editar hoja de trabajo',
+                size: 'xl',
+                buttons: [
+                    {
+                        name: "do-work-edit",
+                        text: "Guardar",
+                        variant: "primary",
+                        method: "PUT",
+                        onClick: doWorkREST,
+                    }
+                ],
+                content: {
+                    type: "form",
+                    config: {
+                        fields: [
+                            {
+                                type: "datetime",
+                                name: "created_at",
+                                label: "Fecha",
+                            }, {
+                                type: "text",
+                                name: "number",
+                                label: "Folio",
+                            }, {
+                                type: "text",
+                                name: "unit",
+                                label: "Unidad",
+                            }, {
+                                type: "text",
+                                name: "model",
+                                label: "Modelo",
+                            }, {
+                                type: "select",
+                                name: "taxpayer_id",
+                                label: "RFC",
+                                endpoint: "taxpayer"
+                            }, {
+                                type: "text",
+                                name: "invoice_number",
+                                label: "Numero de factura",
+                            }, {
+                                type: "date",
+                                name: "invoice_date",
+                                label: "Fecha de factura",
+                            }, {
+                                type: "checkbox",
+                                name: "authorized",
+                                label: "Autorizado"
+                            }, {
+                                type: "checkbox",
+                                name: "include_iva",
+                                label: "Incluir IVA"
+                            }, {
+                                type: "checkbox",
+                                name: "requires_invoice",
+                                label: "Requiere factura"
+                            }, {
+                                type: "checkbox",
+                                name: "has_credit",
+                                label: "Credito"
+                            }, {
+                                type: "number",
+                                name: "discount",
+                                label: "Descuento",
+                                step: 0.01
+                            }, {
+                                type: "text",
+                                name: "comment",
+                                label: "Observaciones",
+                            }, {
+                                type: "multichoice",
+                                name: "work_employees",
+                                label: "Trabajadores",
+                                endpoint: "employee",
+                                formatter: multichoiceEmployeeFormatter,
+                                fields: [],
+                            }
+                        ]
+                    }
+                }
+            }
+        }, {
+            name: "work_products",
+            modal: {
+                title: 'Editar productos de hoja de trabajo',
+                size: 'xl',
+                buttons: [
+                    {
+                        name: "do-work_products",
+                        text: "Guardar",
+                        variant: "primary",
+                        method: "PUT",
+                        onClick: doWorkREST,
+                    }
+                ],
+                content: {
+                    type: "form",
+                    config: {
+                        fields: [
+                            {
+                                type: "formTable",
+                                name: "work_unregisteredproducts",
+                                label: "Productos no registrados",
+                                fields: [
+                                    {
+                                        name: "amount",
+                                        label: "Cantidad",
+                                        type: "number",
+                                        defaultValue: 1
+                                    }, {
+                                        name: "code",
+                                        label: "Codigo",
+                                        type: "text",
+                                    }, {
+                                        name: "description",
+                                        label: "Descripcion",
+                                        type: "text",
+                                    }, {
+                                        name: "price",
+                                        label: "Precio Unitario",
+                                        type: "number",
+                                    }, 
+                                ],
+                            }, {
+                                type: "multichoice",
+                                name: "work_customer_products",
+                                label: "Productos en lista de precios",
+                                endpoint: "customer",
+                                subfield: "customer_products",
+                                formatter: multichoiceProductFormatter,
+                                fields: [
+                                    {
+                                        name: "amount",
+                                        label: "Cantidad",
+                                        type: "number",
+                                    }, {
+                                        name: "price",
+                                        label: "Precio",
+                                        type: "number",
+                                    }, 
+                                ],
+                                filterMap: {
+                                    "customer": "customer"
+                                }
+                            }, {
+                                type: "multichoice",
+                                name: "work_products",
+                                label: "Otros productos registrados",
+                                endpoint: "product",
+                                formatter: multichoiceOtherProductFormatter,
+                                fields: [
+                                    {
+                                        name: "amount",
+                                        label: "Cantidad",
+                                        type: "number",
+                                    }, {
+                                        name: "price",
+                                        label: "Precio",
+                                        type: "number",
+                                    }, 
+                                ]
+                            }, {
+                                type: "formTable",
+                                name: "payments",
+                                label: "Pagos",
+                                fields: [
+                                    {
+                                        name: "date",
+                                        label: "Fecha",
+                                        type: "date",
+                                    }, {
+                                        name: "amount",
+                                        label: "Cantidad",
+                                        type: "number",
+                                    }, {
+                                        name: "method",
+                                        label: "Forma de pago",
+                                        type: "select",
+                                        endpoint: "payment_method" 
+                                    },
+                                ],
+                            },
+                        ]
+                    }
+                }
+            }
+        }, {
             name: "work-order",
             modal: {
                 title: 'Trabajo a orden de compra',

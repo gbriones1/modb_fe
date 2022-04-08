@@ -456,8 +456,8 @@ var orders = {
     ],
     sheet: {
         singleFields: [{
-            field: 'id',
-            title: 'Folio',
+            field: 'workbuy_number',
+            title: 'Registro',
         }, {
             field: 'created_at',
             title: 'Fecha',

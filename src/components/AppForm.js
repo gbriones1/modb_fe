@@ -69,6 +69,20 @@ const InputDate = ({ fieldOpts, formName }) => {
     )
 }
 
+const InputDateTime = ({ fieldOpts, formName }) => {
+    return (
+        <Form.Group as={Row} className="mb-3 form-field" controlId={formName+"_"+fieldOpts.name}>
+            <Form.Label column sm={2}>{fieldOpts.label}</Form.Label>
+            <Col sm={10}>
+                <Form.Control type="datetime-local" placeholder={fieldOpts.placeholder} name={fieldOpts.name} defaultValue={fieldOpts.defaultValue}/>
+                <Form.Text className="text-muted">
+                {fieldOpts.description}
+                </Form.Text>
+            </Col>
+        </Form.Group>
+    )
+}
+
 const InputCheckbox = ({ fieldOpts, formName }) => {
     return (
         <Form.Group as={Row} className="mb-3 form-field" controlId={formName+"_"+fieldOpts.name}>
@@ -202,7 +216,7 @@ const FormTable = ({ fieldOpts, formName }) => {
                     <thead><tr>
                     {fieldOpts.fields.map((field, i) => <th data-field={field.name} data-type={field.type} data-config={JSON.stringify(field)} key={i}>{field.label}</th>)}
                     <th>
-                    <button className="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-dismiss="modal" data-bs-target={"#"+fieldOpts.name+"-"+formName} onClick={onClick}><i className="fa fa-plus"></i></button>
+                    <button className="btn btn-primary btn-sm formTable-new" data-bs-toggle="modal" data-bs-dismiss="modal" data-bs-target={"#"+fieldOpts.name+"-"+formName} onClick={onClick}><i className="fa fa-plus"></i></button>
                     </th>
                     </tr></thead>
                     <tbody></tbody>
@@ -343,6 +357,8 @@ const AppForm = ({ name, config }) => {
                         return <InputNumber fieldOpts={ field } formName={ name } key={Math.random().toString(16).slice(2)}></InputNumber>
                     case 'date':
                         return <InputDate fieldOpts={ field } formName={ name } key={Math.random().toString(16).slice(2)}></InputDate>
+                    case 'datetime':
+                        return <InputDateTime fieldOpts={ field } formName={ name } key={Math.random().toString(16).slice(2)}></InputDateTime>
                     case 'checkbox':
                         return <InputCheckbox fieldOpts={ field } formName={ name } key={Math.random().toString(16).slice(2)}></InputCheckbox>
                     case 'select':
